@@ -572,15 +572,34 @@
                 }
             } else if (type === 'grass') {
                 // Añadir monedas a algunas filas de hierba
-                if (Math.random() < 0.2) {
-                    const coinXTile = Math.floor(Math.random() * GAME_WIDTH_TILES);
-                    const coinElement = createCoinElement(laneData, coinXTile);
-                    laneData.coins.push({
-                        element: coinElement,
-                        x: coinXTile * TILE_SIZE, // Posición en píxeles para la colisión
-                        y: 0, // Relativo al carril
-                        collected: false
-                    });
+                if (Math.random() < 0.4) { // Aumentado a 40% de probabilidad
+                    const MAX_COINS_TO_TRY_SPAWNING = 3; // Intentar generar hasta 3 burgers
+                    const COIN_SPAWN_CHANCE_PER_SLOT = 0.6; // 60% de probabilidad para cada intento
+
+                    let spawnedPositions = new Set(); // Para evitar burgers apiladas
+
+                    for (let i = 0; i < MAX_COINS_TO_TRY_SPAWNING; i++) {
+                        if (Math.random() < COIN_SPAWN_CHANCE_PER_SLOT) {
+                            let coinXTile;
+                            let attempts = 0;
+                            // Intentar encontrar una posición única
+                            do {
+                                coinXTile = Math.floor(Math.random() * GAME_WIDTH_TILES);
+                                attempts++;
+                            } while (spawnedPositions.has(coinXTile) && attempts < GAME_WIDTH_TILES * 2); // Evitar bucle infinito
+
+                            if (!spawnedPositions.has(coinXTile)) {
+                                const coinElement = createCoinElement(laneData, coinXTile);
+                                laneData.coins.push({
+                                    element: coinElement,
+                                    x: coinXTile * TILE_SIZE, // Posición en píxeles para la colisión
+                                    y: 0, // Relativo al carril
+                                    collected: false
+                                });
+                                spawnedPositions.add(coinXTile);
+                            }
+                        }
+                    }
                 }
 
                 // Añadir nuevo obstáculo cuadrado_negro en filas de hierba (máximo 1 por fila)
