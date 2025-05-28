@@ -327,11 +327,12 @@
     </style>
 </head>
 <body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2W98TT7"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="start-screen">
         <img id="start-screen-logo" src="https://i.ibb.co/rKdjZkM8/descarga-1.png" alt="Burger Logo">
         <h1>BURGER RUN</h1>
-        <p>Esquiva los obstáculos y come todas las burgers que puedas.</p>
-        <p>Avanzar una fila = 1 punto<br>Comer una burger = 2 puntos</p>
+        <p>Esquiva los obstáculos y come todas las burgers que puedas.<br>Avanzar una fila = 1 punto<br>Comer una burger = 2 puntos</p>
         <div class="spacer"></div> <p>¡CONSIGUE 150 PUNTOS Y GÁNATE MERCH EXCLUSIVA DE BURGERBOY!</p>
         
         <div class="input-group">
@@ -919,6 +920,26 @@
                     // Podrías mostrar un mensaje al usuario para que toque la pantalla para activar el sonido
                 });
             }
+
+            // --- GTM: Enviar evento de inicio de ronda de juego ---
+            if (typeof dataLayer !== 'undefined') {
+                let currentEngagementType;
+                // Si gameStarted es FALSE al principio de esta función, es el primer juego.
+                // Si gameStarted es TRUE, es un reinicio.
+                if (!gameStarted) { 
+                    currentEngagementType = 'initial_play';
+                } else { 
+                    currentEngagementType = 'restart_play';
+                }
+                
+                dataLayer.push({
+                    'event': 'game_round_start', // Nombre del evento
+                    'engagement_type': currentEngagementType,
+                    'player_name': currentPlayerName,
+                    'player_dni': currentPlayerDNI
+                });
+            }
+            // --- Fin GTM Evento ---
         }
 
         // --- Lógica de Control Táctil ---
