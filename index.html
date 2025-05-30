@@ -197,6 +197,12 @@
             box-sizing: border-box; /* Incluir padding en el ancho total */
             pointer-events: auto; /* Asegura que la pantalla de inicio reciba clics */
         }
+        #start-screen-logo-h1 { /* Clase para la imagen del logo en h1 */
+            width: 150px; /* Ajustado al ancho del logo superior */
+            height: auto;
+            margin-bottom: 10px; /* Espacio debajo de la imagen */
+            display: block; /* Para centrar con margin: auto */
+        }
         #start-screen h1 { 
             font-size: 36px; /* Más pequeño que 40px */
             margin-top: 0px; /* Ajustado para acercar al logo */
@@ -331,7 +337,7 @@
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="start-screen">
         <img id="start-screen-logo" src="https://i.ibb.co/rKdjZkM8/descarga-1.png" alt="Burger Logo">
-        <h1>BURGER RUN</h1>
+        <img id="burger-run-title-logo" src="https://i.ibb.co/hR7S7jVK/burger-run-logo.png" alt="Burger Run Logo">
         <p>Esquiva los obstáculos y come todas las burgers que puedas.<br>Avanzar una fila = 1 punto<br>Comer una burger = 2 puntos</p>
         <div class="spacer"></div> <p>¡CONSIGUE 150 PUNTOS Y GÁNATE MERCH EXCLUSIVA DE BURGERBOY!</p>
         
@@ -392,6 +398,15 @@
         <source src="https://nsanchezbg.github.io/BrandGeeksBB/City%20Echoes.mp3" type="audio/mpeg">
         Tu navegador no soporta el elemento de audio.
     </audio>
+    <audio id="spawn-sound" preload="auto">
+        <source src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/2a2ab39143cd76b9de8f6016309f74e901d1e367/spawn.MP3" type="audio/mpeg">
+    </audio>
+    <audio id="coin-sound" preload="auto">
+        <source src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/2a2ab39143cd76b9de8f6016309f74e901d1e367/beep.MP3" type="audio/mpeg">
+    </audio>
+    <audio id="lose-sound" preload="auto">
+        <source src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/49d138b73040487c61a365eef538acc6f1a6fddf/lose.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
         // Obtener referencias a los elementos del DOM
@@ -415,6 +430,9 @@
         const cameraImage = document.getElementById('camera-image'); // Imagen de la cámara
         const winMessageText = document.getElementById('win-message-text'); // Texto de "Toma una captura..."
         const backgroundMusic = document.getElementById('background-music'); // Elemento de audio
+        const spawnSound = document.getElementById('spawn-sound'); // Sonido de spawn
+        const coinSound = document.getElementById('coin-sound');   // Sonido de coin
+        const loseSound = document.getElementById('lose-sound');   // Sonido de lose
 
         // Controles móviles
         const leftButton = document.getElementById('left-button');
@@ -781,6 +799,10 @@
                             coinsDisplay.textContent = coins;
                             // Eliminar del array para evitar volver a comprobar
                             currentLane.coins.splice(index, 1);
+                            if (coinSound) { // Reproducir sonido de moneda
+                                coinSound.currentTime = 0; // Reiniciar sonido
+                                coinSound.play().catch(error => console.error("Error al reproducir sonido de moneda:", error));
+                            }
                         }
                     }
                 });
@@ -824,6 +846,12 @@
             mobileControls.style.display = 'none';
             // Deshabilitar interacción con el juego
             gameContainer.style.pointerEvents = 'none';
+
+            // Reproducir sonido de fin de juego
+            if (loseSound) {
+                loseSound.currentTime = 0; // Reiniciar sonido
+                loseSound.play().catch(error => console.error("Error al reproducir sonido de fin de juego:", error));
+            }
 
             // Cambiar la condición de victoria a 150 puntos
             if (finalScore >= 150) { 
@@ -915,10 +943,15 @@
             // Reproducir música al iniciar el juego
             if (backgroundMusic) {
                 backgroundMusic.play().catch(error => {
-                    console.error("Error al intentar reproducir la música:", error);
+                    console.error("Error al intentar reproducir la música de fondo:", error);
                     // Esto puede ocurrir si el navegador bloquea la reproducción automática
                     // Podrías mostrar un mensaje al usuario para que toque la pantalla para activar el sonido
                 });
+            }
+            // Reproducir sonido de spawn
+            if (spawnSound) {
+                spawnSound.currentTime = 0; // Reiniciar sonido
+                spawnSound.play().catch(error => console.error("Error al reproducir sonido de spawn:", error));
             }
 
             // --- GTM: Enviar evento de inicio de ronda de juego ---
@@ -926,6 +959,8 @@
                 let currentEngagementType;
                 // Si gameStarted es FALSE al principio de esta función, es el primer juego.
                 // Si gameStarted es TRUE, es un reinicio.
+                // La variable `gameStarted` se actualizará a `true` después de esta lógica,
+                // así que `!gameStarted` aquí indica si es la *primera* vez que se llama desde la pantalla de inicio.
                 if (!gameStarted) { 
                     currentEngagementType = 'initial_play';
                 } else { 
