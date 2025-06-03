@@ -11,7 +11,7 @@
     })(window,document,'script','dataLayer','GTM-K2W98TT7');</script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffffff"> 
 
     <style>
@@ -66,7 +66,7 @@
             transition: left 0.1s linear, top 0.1s linear;
             z-index: 10;
             box-sizing: border-box;
-            /* PNG del jugador - CAMBIAR A RUTA RELATIVA */
+            /* PNG del jugador - RUTA RELATIVA */
             background-image: url('player.png'); 
             background-size: contain;
             background-repeat: no-repeat;
@@ -87,7 +87,7 @@
             height: 20px; /* Tamaño ajustado para la imagen de la moneda */
             position: absolute;
             z-index: 5;
-            /* PNG de la moneda - CAMBIAR A RUTA RELATIVA */
+            /* PNG de la moneda - RUTA RELATIVA */
             background-image: url('hamburger_411275.png');
             background-size: contain;
             background-repeat: no-repeat;
@@ -427,6 +427,19 @@
     </audio>
 
     <script>
+        // PWA: Registrar el Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js') // Ruta absoluta desde la raíz del dominio
+                    .then(registration => {
+                        console.log('Service Worker registrado con éxito:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Fallo el registro del Service Worker:', error);
+                    });
+            });
+        }
+
         // Obtener referencias a los elementos del DOM
         const gameContainer = document.getElementById('game-container');
         const player = document.getElementById('player');
