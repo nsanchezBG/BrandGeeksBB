@@ -487,6 +487,9 @@
         const BLINK_DURATION = 5; // Frames que los ojos permanecen cerrados (muy corto para un parpadeo)
         // --- FIN: Variables para el parpadeo del jugador ---
 
+        // Variables para el control de dirección del jugador
+        let playerFacingDirection = 1; // 1 para izquierda (por defecto), -1 para derecha (reflejado)
+
         // Controles móviles
         const leftButton = document.getElementById('left-button');
         const upButton = document.getElementById('up-button');
@@ -730,6 +733,9 @@
         function updatePlayerPosition() {
             player.style.left = (playerPos.x * TILE_SIZE) + 'px'; 
             player.style.bottom = (playerPos.y * TILE_SIZE) + 'px';
+            // Combina la transformación de desplazamiento con la de escala para la dirección
+            const scrollOffset = Math.max(0, (playerPos.y - Math.floor(GAME_HEIGHT_TILES / 2.5)) * TILE_SIZE);
+            player.style.transform = `translateY(${scrollOffset}px) scaleX(${playerFacingDirection})`;
         }
 
         /**
@@ -742,6 +748,13 @@
 
             const newX = playerPos.x + dx;
             const newY = playerPos.y + dy;
+
+            // Actualiza la dirección visual del jugador si hay movimiento horizontal
+            if (dx > 0) { // Moviendo a la derecha
+                playerFacingDirection = -1; // Reflejar para que mire a la derecha
+            } else if (dx < 0) { // Moviendo a la izquierda
+                playerFacingDirection = 1; // Orientación normal para que mire a la izquierda
+            }
 
             // Comprobaciones de límites
             if (newX < 0 || newX >= GAME_WIDTH_TILES) return;
@@ -764,12 +777,13 @@
             }
             
             // Desplazamiento de la pantalla: Mover todo el contenido del contenedor del juego
+            // La transformación de desplazamiento de las lanes es independiente de la del player
             const scrollOffset = Math.max(0, (playerPos.y - Math.floor(GAME_HEIGHT_TILES / 2.5)) * TILE_SIZE);
             lanes.forEach(lane => {
                 lane.element.style.transform = `translateY(${scrollOffset}px)`;
             });
-            player.style.transform = `translateY(${scrollOffset}px)`;
-
+            // player.style.transform se actualiza en updatePlayerPosition()
+            
             updatePlayerPosition(); // Actualización visual del jugador
             checkCollisions(); // Comprobar colisiones después del movimiento
         }
@@ -928,33 +942,6 @@
         }
 
         /**
-         * Función para actualizar la animación de parpadeo del jugador.
-         */
-        function updatePlayerBlinking() {
-            if (gameOver || !gameStarted) {
-                player.style.backgroundImage = `url('${playerEyesOpenURL}')`; // Asegurar ojos abiertos si el juego no está activo
-                return;
-            }
-
-            if (!isPlayerBlinking) {
-                blinkTimer--;
-                if (blinkTimer <= 0) {
-                    isPlayerBlinking = true;
-                    blinkTimer = BLINK_DURATION; // Duración de los ojos cerrados
-                    player.style.backgroundImage = `url('${playerEyesClosedURL}')`;
-                }
-            } else {
-                blinkTimer--;
-                if (blinkTimer <= 0) {
-                    isPlayerBlinking = false;
-                    // Intervalo aleatorio para el próximo parpadeo
-                    blinkTimer = Math.floor(Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN + 1)) + BLINK_INTERVAL_MIN;
-                    player.style.backgroundImage = `url('${playerEyesOpenURL}')`;
-                }
-            }
-        }
-
-        /**
          * El bucle principal del juego, que se ejecuta en cada frame de animación.
          */
         function gameLoop() {
@@ -1013,7 +1000,7 @@
             lanes.forEach(lane => {
                 lane.element.style.transform = `translateY(${scrollOffset}px)`;
             });
-            player.style.transform = `translateY(${scrollOffset}px)`;
+            // player.style.transform se actualiza en updatePlayerPosition()
 
             gameStarted = true; // El juego ha comenzado
             gameLoop(); // Iniciar el bucle del juego
