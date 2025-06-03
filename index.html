@@ -942,6 +942,33 @@
         }
 
         /**
+         * Función para actualizar la animación de parpadeo del jugador.
+         */
+        function updatePlayerBlinking() {
+            if (gameOver || !gameStarted) {
+                player.style.backgroundImage = `url('${playerEyesOpenURL}')`; // Asegurar ojos abiertos si el juego no está activo
+                return;
+            }
+
+            if (!isPlayerBlinking) {
+                blinkTimer--;
+                if (blinkTimer <= 0) {
+                    isPlayerBlinking = true;
+                    blinkTimer = BLINK_DURATION; // Duración de los ojos cerrados
+                    player.style.backgroundImage = `url('${playerEyesClosedURL}')`;
+                }
+            } else {
+                blinkTimer--;
+                if (blinkTimer <= 0) {
+                    isPlayerBlinking = false;
+                    // Intervalo aleatorio para el próximo parpadeo
+                    blinkTimer = Math.floor(Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN + 1)) + BLINK_INTERVAL_MIN;
+                    player.style.backgroundImage = `url('${playerEyesOpenURL}')`;
+                }
+            }
+        }
+
+        /**
          * El bucle principal del juego, que se ejecuta en cada frame de animación.
          */
         function gameLoop() {
@@ -1139,6 +1166,8 @@
             playerPos = { x: Math.floor(GAME_WIDTH_TILES / 2), y: 1 }; // Posición inicial del jugador
             initLanes(); // Inicializar las filas
             updatePlayerPosition(); // Actualizar posición del jugador
+            // Inicializar el temporizador de parpadeo al cargar la página
+            blinkTimer = Math.floor(Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN + 1)) + BLINK_INTERVAL_MIN;
         });
     </script>
 </body>
