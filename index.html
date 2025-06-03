@@ -10,6 +10,10 @@
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-K2W98TT7');</script>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#ffffff"> 
+
     <style>
         /* Estilos generales del cuerpo */
         body {
@@ -36,6 +40,13 @@
             touch-action: none; 
             /* Por defecto, no recibe eventos de puntero hasta que el juego inicia */
             pointer-events: none; 
+
+            /* --- INICIO: ESTILOS RESPONSIVOS --- */
+            /* Escala el contenedor para que se ajuste a la pantalla, manteniendo la proporción */
+            transform-origin: center center;
+            transform: scale(min(1, calc(90vw / 400), calc(90vh / 600))); 
+            /* El 90vw/90vh es para dejar un pequeño margen alrededor del juego */
+            /* --- FIN: ESTILOS RESPONSIVOS --- */
         }
         /* Estilo para cada carril (fila) */
         .lane {
@@ -55,8 +66,8 @@
             transition: left 0.1s linear, top 0.1s linear;
             z-index: 10;
             box-sizing: border-box;
-            /* PNG del jugador */
-            background-image: url('https://i.ibb.co/jP49jhv1/player.png');
+            /* PNG del jugador - URL ACTUALIZADA */
+            background-image: url('https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/player.png'); 
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -76,15 +87,15 @@
             height: 20px; /* Tamaño ajustado para la imagen de la moneda */
             position: absolute;
             z-index: 5;
-            /* PNG de la moneda */
-            background-image: url('https://i.ibb.co/bjW4KsPS/hamburger-411275.png');
+            /* PNG de la moneda - URL ACTUALIZADA */
+            background-image: url('https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/hamburger_411275.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
         }
         /* Marcador de puntuación */
         #score-board {
-            margin-top: 10px;
+            margin-top: 10px; /* Ajuste para el escalado del juego */
             font-size: 24px; /* Tamaño base para los números */
             color: #000000; /* Texto negro para contraste */
             font-family: 'VT323', monospace; /* Aplicar fuente */
@@ -93,6 +104,8 @@
             align-items: center; /* Alinear verticalmente */
             width: 400px; /* Ancho igual al contenedor del juego */
             padding: 5px 0;
+            /* Ajuste de margen superior para compensar el escalado del juego */
+            margin-top: calc(10px * min(1, calc(90vh / 600))); /* Escala el margen con el juego */
         }
         #score-board .score-item {
             display: flex;
@@ -210,6 +223,12 @@
             /* text-shadow: 2px 2px #000; ELIMINADO: Sombra del texto Burger Run */
             font-family: 'VT323', monospace; /* Aplicar fuente */
             color: #000000; /* Asegurar color negro */
+        }
+        #start-screen #burger-run-title-logo { /* Estilo para la imagen del título */
+            width: 150px; /* Ancho igual al logo de Burgerboy */
+            height: auto;
+            margin-top: 0px; /* Acercar al logo superior */
+            margin-bottom: 10px; /* Espacio debajo */
         }
         #start-screen p { 
             font-size: 16px; /* Más pequeño que 18px */
@@ -336,8 +355,8 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2W98TT7"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="start-screen">
-        <img id="start-screen-logo" src="https://i.ibb.co/rKdjZkM8/descarga-1.png" alt="Burger Logo">
-        <img id="burger-run-title-logo" src="https://i.ibb.co/hR7S7jVK/burger-run-logo.png" alt="Burger Run Logo">
+        <img id="start-screen-logo" src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/descarga%20(1).png" alt="Burger Logo">
+        <img id="burger-run-title-logo" src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/burger%20run%20logo.png" alt="Burger Run Logo">
         <p>Esquiva los obstáculos y come todas las burgers que puedas.<br>Avanzar una fila = 1 punto<br>Comer una burger = 2 puntos</p>
         <div class="spacer"></div> <p>¡CONSIGUE 150 PUNTOS Y GÁNATE MERCH EXCLUSIVA DE BURGERBOY!</p>
         
@@ -368,7 +387,7 @@
         <p>DNI / CE:</p>
         <p id="player-info-dni"></p>   
         <div class="spacer"></div> 
-        <img id="camera-image" src="https://i.ibb.co/Lhkk99D5/camera.png" alt="Camera Icon">
+        <img id="camera-image" src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/camera.png" alt="Camera Icon">
         <p id="win-message-text"></p> 
         <button id="restart-button" disabled>Reiniciar</button> </div>
 
@@ -387,7 +406,7 @@
             <span class="score-text">Filas avanzadas:</span>
             <span id="score" class="score-number">0</span>
         </div>
-        <img src="https://i.ibb.co/rKdjZkM8/descarga-1.png" alt="Burger Logo Score">
+        <img src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/descarga%20(1).png" alt="Burger Logo Score">
         <div class="score-item">
             <span class="score-text">Burgers comidas:</span>
             <span id="coins" class="score-number">0</span>
@@ -396,13 +415,12 @@
 
     <audio id="background-music" loop preload="auto">
         <source src="https://nsanchezbg.github.io/BrandGeeksBB/City%20Echoes.mp3" type="audio/mpeg">
-        Tu navegador no soporta el elemento de audio.
     </audio>
     <audio id="spawn-sound" preload="auto">
-        <source src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/2a2ab39143cd76b9de8f6016309f74e901d1e367/spawn.MP3" type="audio/mpeg">
+        <source src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/spawn.MP3" type="audio/mpeg">
     </audio>
     <audio id="coin-sound" preload="auto">
-        <source src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/2a2ab39143cd76b9de8f6016309f74e901d1e367/beep.MP3" type="audio/mpeg">
+        <source src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/beep.MP3" type="audio/mpeg">
     </audio>
     <audio id="lose-sound" preload="auto">
         <source src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/49d138b73040487c61a365eef538acc6f1a6fddf/lose.mp3" type="audio/mpeg">
