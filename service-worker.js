@@ -1,13 +1,14 @@
-const CACHE_NAME = 'burger-run-cache-v1';
+const CACHE_NAME = 'burger-run-cache-v2'; // Incrementa la versión de la caché para forzar la actualización
 const urlsToCache = [
   '/', // La página principal
   '/index.html',
   // --- IMÁGENES (rutas relativas) ---
   '/descarga%20(1).png',
   '/burger%20run%20logo.png',
-  '/player.png',
+  '/player.png', // El player original (negro)
   '/hamburger_411275.png',
   '/camera.png',
+  '/player%20icono%20desktop.png', // ¡El nuevo icono blanco!
   // --- AUDIOS (rutas relativas) ---
   '/City%20Echoes.mp3',
   '/spawn.MP3',
