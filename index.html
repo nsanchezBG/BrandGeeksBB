@@ -66,8 +66,8 @@
             transition: left 0.1s linear, top 0.1s linear;
             z-index: 10;
             box-sizing: border-box;
-            /* PNG del jugador - URL ACTUALIZADA */
-            background-image: url('https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/player.png'); 
+            /* PNG del jugador - CAMBIAR A RUTA RELATIVA */
+            background-image: url('player.png'); 
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -87,8 +87,8 @@
             height: 20px; /* Tamaño ajustado para la imagen de la moneda */
             position: absolute;
             z-index: 5;
-            /* PNG de la moneda - URL ACTUALIZADA */
-            background-image: url('https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/hamburger_411275.png');
+            /* PNG de la moneda - CAMBIAR A RUTA RELATIVA */
+            background-image: url('hamburger_411275.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
@@ -355,8 +355,8 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2W98TT7"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="start-screen">
-        <img id="start-screen-logo" src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/descarga%20(1).png" alt="Burger Logo">
-        <img id="burger-run-title-logo" src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/burger%20run%20logo.png" alt="Burger Run Logo">
+        <img id="start-screen-logo" src="descarga%20(1).png" alt="Burger Logo">
+        <img id="burger-run-title-logo" src="burger%20run%20logo.png" alt="Burger Run Logo">
         <p>Esquiva los obstáculos y come todas las burgers que puedas.<br>Avanzar una fila = 1 punto<br>Comer una burger = 2 puntos</p>
         <div class="spacer"></div> <p>¡CONSIGUE 150 PUNTOS Y GÁNATE MERCH EXCLUSIVA DE BURGERBOY!</p>
         
@@ -387,7 +387,7 @@
         <p>DNI / CE:</p>
         <p id="player-info-dni"></p>   
         <div class="spacer"></div> 
-        <img id="camera-image" src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/camera.png" alt="Camera Icon">
+        <img id="camera-image" src="camera.png" alt="Camera Icon">
         <p id="win-message-text"></p> 
         <button id="restart-button" disabled>Reiniciar</button> </div>
 
@@ -406,7 +406,7 @@
             <span class="score-text">Filas avanzadas:</span>
             <span id="score" class="score-number">0</span>
         </div>
-        <img src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/descarga%20(1).png" alt="Burger Logo Score">
+        <img src="descarga%20(1).png" alt="Burger Logo Score">
         <div class="score-item">
             <span class="score-text">Burgers comidas:</span>
             <span id="coins" class="score-number">0</span>
@@ -414,16 +414,16 @@
     </div>
 
     <audio id="background-music" loop preload="auto">
-        <source src="https://nsanchezbg.github.io/BrandGeeksBB/City%20Echoes.mp3" type="audio/mpeg">
+        <source src="City%20Echoes.mp3" type="audio/mpeg">
     </audio>
     <audio id="spawn-sound" preload="auto">
-        <source src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/spawn.MP3" type="audio/mpeg">
+        <source src="spawn.MP3" type="audio/mpeg">
     </audio>
     <audio id="coin-sound" preload="auto">
-        <source src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/aa0fd9788819b953a4681641eec7ca92fcc5dfba/beep.MP3" type="audio/mpeg">
+        <source src="beep.MP3" type="audio/mpeg">
     </audio>
     <audio id="lose-sound" preload="auto">
-        <source src="https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/49d138b73040487c61a365eef538acc6f1a6fddf/lose.mp3" type="audio/mpeg">
+        <source src="lose.mp3" type="audio/mpeg">
     </audio>
 
     <script>
@@ -883,7 +883,7 @@
                 cameraImage.style.display = 'none'; // Ocultar imagen de cámara si perdió
             }
 
-            gameOverMessage.style.display = 'flex'; // Mostrar el mensaje de fin de juego (ahora con display: flex)
+            gameOverMessage.style.display = 'flex'; // Mostrar el mensaje de fin de juego (now with display: flex)
             
             // Habilitar el botón de reiniciar después de un breve retraso
             restartButton.disabled = true; // Asegurarse de que esté deshabilitado al mostrar la pantalla
@@ -1093,3 +1093,46 @@
     </script>
 </body>
 </html>
+```
+
+**2. `manifest.json` (Nuevo Archivo)**
+
+Guarda este código en un archivo llamado `manifest.json` en la **misma carpeta** que tu `index.html`.
+
+
+```json
+{
+  "name": "BURGER RUN",
+  "short_name": "Burger Run",
+  "description": "Esquiva los obstáculos y come todas las burgers que puedas.",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "player.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "player.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "player.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "player.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
