@@ -1,4 +1,4 @@
-const CACHE_NAME = 'burger-run-cache-v5'; // Incrementa la versión de la caché para forzar la actualización
+const CACHE_NAME = 'burger-run-cache-v6'; // Incrementa la versión de la caché para forzar la actualización
 // Las rutas ahora incluyen /BrandGeeksBB/ para que el Service Worker las cachee correctamente
 const urlsToCache = [
   '/BrandGeeksBB/', // La página principal de la subcarpeta
