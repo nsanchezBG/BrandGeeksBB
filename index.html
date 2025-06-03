@@ -4,14 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Burger Run</title>
+    <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-K2W98TT7');</script>
+    <!-- End Google Tag Manager -->
+    
+    <!-- Importar la fuente VT323 de Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 
+    <!-- PWA: Enlace al archivo manifest.json -->
     <link rel="manifest" href="manifest.json">
+    <!-- PWA: Colores para la barra de estado del navegador en Android -->
     <meta name="theme-color" content="#ffffff"> 
 
     <style>
@@ -66,7 +72,7 @@
             transition: left 0.1s linear, top 0.1s linear;
             z-index: 10;
             box-sizing: border-box;
-            /* PNG del jugador - RUTA RELATIVA */
+            /* PNG del jugador - RUTA RELATIVA. Se establecerá dinámicamente por JS */
             background-image: url('player.png'); 
             background-size: contain;
             background-repeat: no-repeat;
@@ -352,13 +358,16 @@
     </style>
 </head>
 <body>
+    <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2W98TT7"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <div id="start-screen">
         <img id="start-screen-logo" src="descarga%20(1).png" alt="Burger Logo">
         <img id="burger-run-title-logo" src="burger%20run%20logo.png" alt="Burger Run Logo">
         <p>Esquiva los obstáculos y come todas las burgers que puedas.<br>Avanzar una fila = 1 punto<br>Comer una burger = 2 puntos</p>
-        <div class="spacer"></div> <p>¡CONSIGUE 150 PUNTOS Y GÁNATE MERCH EXCLUSIVA DE BURGERBOY!</p>
+        <div class="spacer"></div> <!-- Línea vacía -->
+        <p>¡CONSIGUE 150 PUNTOS Y GÁNATE MERCH EXCLUSIVA DE BURGERBOY!</p>
         
         <div class="input-group">
             <label for="playerName">NOMBRE:<span id="nameAsterisk" class="required-asterisk">*</span></label>
@@ -431,6 +440,8 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 // RUTA CORREGIDA PARA EL SERVICE WORKER
+                // Importante: La ruta aquí debe ser relativa a la raíz del dominio de GitHub Pages.
+                // Si tu repo es nsanchezbg.github.io/BrandGeeksBB/, entonces la raíz de tu PWA es /BrandGeeksBB/
                 navigator.serviceWorker.register('/BrandGeeksBB/service-worker.js') 
                     .then(registration => {
                         console.log('Service Worker registrado con éxito:', registration);
@@ -465,6 +476,16 @@
         const spawnSound = document.getElementById('spawn-sound'); // Sonido de spawn
         const coinSound = document.getElementById('coin-sound');   // Sonido de coin
         const loseSound = document.getElementById('lose-sound');   // Sonido de lose
+
+        // --- INICIO: Variables y URLs para el parpadeo del jugador ---
+        const playerEyesOpenURL = 'player.png'; // Asumiendo que esta es la imagen del jugador con ojos abiertos
+        const playerEyesClosedURL = 'player-blink.png'; // URL de la imagen de parpadeo
+        let isPlayerBlinking = false;
+        let blinkTimer = 0;
+        const BLINK_INTERVAL_MIN = 180; // Mínimo de frames entre parpadeos (ej. 3 segundos a 60 FPS)
+        const BLINK_INTERVAL_MAX = 360; // Máximo de frames entre parpadeos (ej. 6 segundos)
+        const BLINK_DURATION = 5; // Frames que los ojos permanecen cerrados (muy corto para un parpadeo)
+        // --- FIN: Variables para el parpadeo del jugador ---
 
         // Controles móviles
         const leftButton = document.getElementById('left-button');
@@ -907,12 +928,40 @@
         }
 
         /**
+         * Función para actualizar la animación de parpadeo del jugador.
+         */
+        function updatePlayerBlinking() {
+            if (gameOver || !gameStarted) {
+                player.style.backgroundImage = `url('${playerEyesOpenURL}')`; // Asegurar ojos abiertos si el juego no está activo
+                return;
+            }
+
+            if (!isPlayerBlinking) {
+                blinkTimer--;
+                if (blinkTimer <= 0) {
+                    isPlayerBlinking = true;
+                    blinkTimer = BLINK_DURATION; // Duración de los ojos cerrados
+                    player.style.backgroundImage = `url('${playerEyesClosedURL}')`;
+                }
+            } else {
+                blinkTimer--;
+                if (blinkTimer <= 0) {
+                    isPlayerBlinking = false;
+                    // Intervalo aleatorio para el próximo parpadeo
+                    blinkTimer = Math.floor(Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN + 1)) + BLINK_INTERVAL_MIN;
+                    player.style.backgroundImage = `url('${playerEyesOpenURL}')`;
+                }
+            }
+        }
+
+        /**
          * El bucle principal del juego, que se ejecuta en cada frame de animación.
          */
         function gameLoop() {
             if (gameOver || !gameStarted) return;
             moveObstacles(); // Mover los obstáculos
             checkCollisions(); // Comprobar colisiones
+            updatePlayerBlinking(); // Actualizar la animación de parpadeo
             gameLoopId = requestAnimationFrame(gameLoop); // Solicitar el siguiente frame
         }
 
