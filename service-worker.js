@@ -1,22 +1,25 @@
-const CACHE_NAME = 'burger-run-cache-v2'; // Incrementa la versión de la caché para forzar la actualización
+const CACHE_NAME = 'burger-run-cache-v5'; // Incrementa la versión de la caché para forzar la actualización
+// Las rutas ahora incluyen /BrandGeeksBB/ para que el Service Worker las cachee correctamente
 const urlsToCache = [
-  '/', // La página principal
-  '/index.html',
-  // --- IMÁGENES (rutas relativas) ---
-  '/descarga%20(1).png',
-  '/burger%20run%20logo.png',
-  '/player.png', // El player original (negro)
-  '/hamburger_411275.png',
-  '/camera.png',
-  '/player%20icono%20desktop.png', // ¡El nuevo icono blanco!
-  // --- AUDIOS (rutas relativas) ---
-  '/City%20Echoes.mp3',
-  '/spawn.MP3',
-  '/beep.MP3',
-  '/lose.mp3',
-  // --- FUENTES (si las quieres offline, necesitarías descargarlas o usar un CDN que cachee) ---
+  '/BrandGeeksBB/', // La página principal de la subcarpeta
+  '/BrandGeeksBB/index.html',
+  // --- IMÁGENES (rutas relativas a la raíz del repositorio de Pages) ---
+  '/BrandGeeksBB/descarga%20(1).png',
+  '/BrandGeeksBB/burger%20run%20logo.png',
+  '/BrandGeeksBB/player.png', // El player original (negro)
+  '/BrandGeeksBB/hamburger_411275.png',
+  '/BrandGeeksBB/camera.png',
+  '/BrandGeeksBB/player%20icono%20desktop.png', // El icono blanco de la PWA
+  '/BrandGeeksBB/player-blink.png', // ¡NUEVO: La imagen de parpadeo!
+  // --- AUDIOS (rutas relativas a la raíz del repositorio de Pages) ---
+  '/BrandGeeksBB/City%20Echoes.mp3',
+  '/BrandGeeksBB/spawn.MP3',
+  '/BrandGeeksBB/beep.MP3',
+  '/BrandGeeksBB/lose.mp3',
+  '/BrandGeeksBB/manifest.json', // Asegurarse de cachear el manifest también
+  // --- FUENTES (URLs externas, se cachean si el CDN lo permite, pero es mejor descargarlas y hacerlas relativas) ---
   'https://fonts.googleapis.com/css2?family=VT323&display=swap',
-  'https://fonts.gstatic.com/s/vt323/v17/pxiKyp4j6v_D_uE_0j_z.woff2' // Ejemplo de WOFF2 para VT323
+  'https://fonts.gstatic.com/s/vt323/v17/pxiKyp4j6v_D_uE_0j_z.woff2' 
 ];
 
 self.addEventListener('install', (event) => {
