@@ -18,7 +18,7 @@
     <!-- PWA: Enlace al archivo manifest.json -->
     <link rel="manifest" href="manifest.json">
     <!-- PWA: Colores para la barra de estado del navegador en Android -->
-    <meta name="theme-color" content="#ffffff"> 
+    <meta name="theme-color" content="#000000"> <!-- Cambiado a negro para mejor contraste con icono blanco -->
 
     <style>
         /* Estilos generales del cuerpo */
@@ -27,7 +27,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            /* Ajuste para que el juego ocupe la mayor parte de la pantalla */
+            min-height: 100vh; /* Asegura que ocupe al menos toda la altura */
+            min-width: 100vw; /* Asegura que ocupe al menos todo el ancho */
             margin: 0;
             background-color: #ffffff; /* Fondo blanco */
             font-family: 'VT323', monospace; /* Fuente principal del juego */
@@ -36,10 +38,13 @@
         /* Contenedor principal del juego */
         #game-container {
             /* --- INICIO: ESTILOS RESPONSIVOS ACTUALIZADOS --- */
-            width: 90vmin; /* Usa el 90% de la dimensión más pequeña del viewport (ancho o alto) */
-            height: calc(90vmin * 1.5); /* Mantiene la relación de aspecto 4:6 (600/400 = 1.5) */
-            max-width: 400px; /* No permite que el juego sea más grande que su tamaño original */
-            max-height: 600px; /* No permite que el juego sea más grande que su tamaño original */
+            width: 100vw; /* Intenta ocupar el 100% del ancho del viewport */
+            height: 100vh; /* Intenta ocupar el 100% de la altura del viewport */
+            aspect-ratio: 400 / 600; /* Mantiene la relación de aspecto 4:6 */
+            object-fit: contain; /* Escala el contenido para que quepa dentro del contenedor */
+            /* Eliminamos max-width y max-height para permitir que crezca más allá de los 400x600px */
+            max-width: 100%; /* Asegura que no se desborde si el viewport es más pequeño */
+            max-height: 100%; /* Asegura que no se desborde si el viewport es más pequeño */
             /* --- FIN: ESTILOS RESPONSIVOS ACTUALIZADOS --- */
 
             background-color: #ffffff; /* Color de fondo blanco para las filas */
@@ -100,8 +105,7 @@
         /* Marcador de puntuación */
         #score-board {
             /* Ajuste de ancho para que se escale con el juego */
-            width: 90vmin; /* Usa el 90% de la dimensión más pequeña del viewport */
-            max-width: 400px; /* No más grande que el tamaño original */
+            width: min(90vmin, 400px); /* Mantener el ancho del contenedor del juego */
             
             margin-top: 15px; /* Margen fijo, ya que el juego se escala con vmin */
             font-size: 24px; /* Tamaño base para los números */
@@ -938,33 +942,6 @@
             setTimeout(() => {
                 restartButton.disabled = false; // Habilitar el botón después de 500ms
             }, 500); // Retraso de 0.5 segundos
-        }
-
-        /**
-         * Función para actualizar la animación de parpadeo del jugador.
-         */
-        function updatePlayerBlinking() {
-            if (gameOver || !gameStarted) {
-                player.style.backgroundImage = `url('${playerEyesOpenURL}')`; // Asegurar ojos abiertos si el juego no está activo
-                return;
-            }
-
-            if (!isPlayerBlinking) {
-                blinkTimer--;
-                if (blinkTimer <= 0) {
-                    isPlayerBlinking = true;
-                    blinkTimer = BLINK_DURATION; // Duración de los ojos cerrados
-                    player.style.backgroundImage = `url('${playerEyesClosedURL}')`;
-                }
-            } else {
-                blinkTimer--;
-                if (blinkTimer <= 0) {
-                    isPlayerBlinking = false;
-                    // Intervalo aleatorio para el próximo parpadeo
-                    blinkTimer = Math.floor(Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN + 1)) + BLINK_INTERVAL_MIN;
-                    player.style.backgroundImage = `url('${playerEyesOpenURL}')`;
-                }
-            }
         }
 
         /**
