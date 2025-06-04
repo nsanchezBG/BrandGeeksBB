@@ -1,4 +1,4 @@
-const CACHE_NAME = 'burger-run-cache-v10'; // Versión de caché incrementada
+const CACHE_NAME = 'burger-run-cache-v11'; // Versión de caché incrementada
 // Las rutas ahora incluyen /BrandGeeksBB/ para que el Service Worker las cachee correctamente
 const urlsToCache = [
   '/BrandGeeksBB/', // La página principal de la subcarpeta
@@ -9,7 +9,7 @@ const urlsToCache = [
   '/BrandGeeksBB/player.png', // El player original (negro)
   '/BrandGeeksBB/hamburger_411275.png',
   '/BrandGeeksBB/camera.png',
-  '/BrandGeeksBB/player%20icono%20desktop.png', // El icono blanco de la PWA (ahora con contenido negro)
+  '/BrandGeeksBB/player%20icono%20desktop.png', // El icono blanco de la PWA
   '/BrandGeeksBB/player-blink.png', // La imagen de parpadeo
   // --- AUDIOS (rutas relativas a la raíz del repositorio de Pages) ---
   '/BrandGeeksBB/City%20Echoes.mp3',
