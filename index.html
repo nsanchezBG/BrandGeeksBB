@@ -43,9 +43,12 @@
             /* Intentar ocupar el máximo espacio posible manteniendo la proporción */
             width: 100%; 
             height: 100%;
-            max-width: calc(100vh * 400 / 600); /* Limita el ancho basado en la altura y la proporción */
-            max-height: calc(100vw * 600 / 400); /* Limita la altura basado en el ancho y la proporción */
+            /* Limita el ancho basado en la altura y la proporción, y viceversa */
+            /* Esto hace que el juego se ajuste a la dimensión más restrictiva */
+            max-width: calc(100vh * 400 / 600); 
+            max-height: calc(100vw * 600 / 400); 
             aspect-ratio: 400 / 600; /* Mantiene la relación de aspecto 4:6 */
+            object-fit: contain; /* Escala el contenido para que quepa dentro del contenedor */
             
             /* Centrar el contenedor del juego si no ocupa toda la pantalla */
             margin: auto; 
@@ -64,7 +67,7 @@
         /* Estilo para cada carril (fila) */
         .lane {
             width: 100%;
-            height: 40px; /* TILE_SIZE */
+            height: 40px; /* TILE_SIZE - se ajustará por JS */
             position: absolute;
             left: 0;
             display: flex;
@@ -73,8 +76,8 @@
         }
         /* Estilo para el jugador */
         #player {
-            width: 36px; /* Ligeramente más pequeño que TILE_SIZE para espacio visual */
-            height: 36px;
+            width: 36px; /* Se ajustará por JS */
+            height: 36px; /* Se ajustará por JS */
             position: absolute;
             transition: left 0.1s linear, top 0.1s linear;
             z-index: 10;
@@ -87,7 +90,7 @@
         }
         /* Estilo para los obstáculos */
         .obstacle {
-            height: 36px; /* Altura consistente con el tamaño del tile */
+            height: 36px; /* Se ajustará por JS */
             position: absolute;
             border: 2px solid #000000; /* Borde negro */
             box-sizing: border-box;
@@ -96,8 +99,8 @@
         }
         /* Estilo para las monedas */
         .coin {
-            width: 20px; /* Tamaño ajustado para la imagen de la moneda */
-            height: 20px; /* Tamaño ajustado para la imagen de la moneda */
+            width: 20px; /* Se ajustará por JS */
+            height: 20px; /* Se ajustará por JS */
             position: absolute;
             z-index: 5;
             /* PNG de la moneda - RUTA RELATIVA */
@@ -109,9 +112,10 @@
         /* Marcador de puntuación */
         #score-board {
             /* Ajuste de ancho para que se escale con el juego */
-            width: min(90vmin, 400px); /* Mantener el ancho del contenedor del juego */
+            width: min(100vw, calc(100vh * 400 / 600)); /* Coincide con el ancho efectivo del game-container */
+            max-width: 400px; /* No más grande que el tamaño original */
             
-            margin-top: 15px; /* Margen fijo, ya que el juego se escala con vmin */
+            margin-top: 15px; /* Margen fijo */
             font-size: 24px; /* Tamaño base para los números */
             color: #000000; /* Texto negro para contraste */
             font-family: 'VT323', monospace; /* Aplicar fuente */
@@ -459,55 +463,11 @@
             });
         }
 
-        // Obtener referencias a los elementos del DOM
-        const gameContainer = document.getElementById('game-container');
-        const player = document.getElementById('player');
-        const scoreDisplay = document.getElementById('score');
-        const coinsDisplay = document.getElementById('coins');
-        const gameOverMessage = document.getElementById('game-over-message');
-        const finalScoreDisplay = document.getElementById('final-score');
-        const restartButton = document.getElementById('restart-button');
-        const startScreen = document.getElementById('start-screen');
-        const startButton = document.getElementById('start-button');
-        const gameOverText = document.getElementById('game-over-text'); // Nuevo elemento para el texto de game over
-        const playerNameInput = document.getElementById('playerName'); // Campo de nombre
-        const playerDNIInput = document.getElementById('playerDNI');   // Campo de DNI
-        const playerInfoNameDisplay = document.getElementById('player-info-name'); // Div para mostrar nombre del jugador
-        const playerInfoDNIDisplay = document.getElementById('player-info-dni');   // Div para mostrar DNI del jugador
-        const validationMessage = document.getElementById('validation-message'); // Mensaje de validación
-        const nameAsterisk = document.getElementById('nameAsterisk'); // Asterisco de nombre
-        const dniAsterisk = document.getElementById('dniAsterisk');     // Asterisco de DNI
-        const cameraImage = document.getElementById('camera-image'); // Imagen de la cámara
-        const winMessageText = document.getElementById('win-message-text'); // Texto de "Toma una captura..."
-        const backgroundMusic = document.getElementById('background-music'); // Elemento de audio
-        const spawnSound = document.getElementById('spawn-sound'); // Sonido de spawn
-        const coinSound = document.getElementById('coin-sound');   // Sonido de coin
-        const loseSound = document.getElementById('lose-sound');   // Sonido de lose
-
-        // --- INICIO: Variables y URLs para el parpadeo del jugador ---
-        const playerEyesOpenURL = 'player.png'; // Asumiendo que esta es la imagen del jugador con ojos abiertos
-        const playerEyesClosedURL = 'player-blink.png'; // URL de la imagen de parpadeo
-        let isPlayerBlinking = false;
-        let blinkTimer = 0;
-        const BLINK_INTERVAL_MIN = 180; // Mínimo de frames entre parpadeos (ej. 3 segundos a 60 FPS)
-        const BLINK_INTERVAL_MAX = 360; // Máximo de frames entre parpadeos (ej. 6 segundos)
-        const BLINK_DURATION = 5; // Frames que los ojos permanecen cerrados (muy corto para un parpadeo)
-        // --- FIN: Variables para el parpadeo del jugador ---
-
-        // Variables para el control de dirección del jugador
-        let playerFacingDirection = 1; // 1 para izquierda (por defecto), -1 para derecha (reflejado)
-
-        // Controles móviles
-        const leftButton = document.getElementById('left-button');
-        const upButton = document.getElementById('up-button');
-        const rightButton = document.getElementById('right-button');
-        const mobileControls = document.getElementById('mobile-controls'); // Referencia a los controles móviles
-
-
+        // --- INICIO: DECLARACIONES DE CONSTANTES Y VARIABLES GLOBALES (MOVIDAS AL PRINCIPIO) ---
         // Constantes del juego
-        const TILE_SIZE = 40; // Tamaño de cada "baldosa" o celda
-        const GAME_WIDTH_TILES = 10; // Ancho del juego en número de baldosas
-        const GAME_HEIGHT_TILES = 15; // Filas visibles en pantalla
+        let TILE_SIZE; // Ahora es dinámico
+        const GAME_WIDTH_TILES_ORIGINAL = 10; // Ancho original en baldosas (para cálculos de TILE_SIZE)
+        const GAME_HEIGHT_TILES_ORIGINAL = 15; // Alto original en baldosas (para cálculos de TILE_SIZE)
         const TOTAL_LANES_BUFFER = 20; // Número total de filas generadas (incluye las fuera de pantalla)
 
         // Variables de estado del juego
@@ -538,6 +498,115 @@
             grass: [{ type: 'square_obstacle', width: 1 }] // Nuevo obstáculo para hierba: un cuadrado negro
         };
 
+        // Variables y URLs para el parpadeo del jugador
+        const playerEyesOpenURL = 'player.png'; // Asumiendo que esta es la imagen del jugador con ojos abiertos
+        const playerEyesClosedURL = 'player-blink.png'; // URL de la imagen de parpadeo
+        let isPlayerBlinking = false;
+        let blinkTimer = 0;
+        const BLINK_INTERVAL_MIN = 180; // Mínimo de frames entre parpadeos (ej. 3 segundos a 60 FPS)
+        const BLINK_INTERVAL_MAX = 360; // Máximo de frames entre parpadeos (ej. 6 segundos)
+        const BLINK_DURATION = 5; // Frames que los ojos permanecen cerrados (muy corto para un parpadeo)
+
+        // Variables para el control de dirección del jugador
+        let playerFacingDirection = 1; // 1 para izquierda (por defecto), -1 para derecha (reflejado)
+        // --- FIN: DECLARACIONES DE CONSTANTES Y VARIABLES GLOBALES ---
+
+
+        // Obtener referencias a los elementos del DOM
+        const gameContainer = document.getElementById('game-container');
+        const player = document.getElementById('player');
+        const scoreDisplay = document.getElementById('score');
+        const coinsDisplay = document.getElementById('coins');
+        const gameOverMessage = document.getElementById('game-over-message');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const restartButton = document.getElementById('restart-button');
+        const startScreen = document.getElementById('start-screen');
+        const startButton = document.getElementById('start-button');
+        const gameOverText = document.getElementById('game-over-text'); // Nuevo elemento para el texto de game over
+        const playerNameInput = document.getElementById('playerName'); // Campo de nombre
+        const playerDNIInput = document.getElementById('playerDNI');   // Campo de DNI
+        const playerInfoNameDisplay = document.getElementById('player-info-name'); // Div para mostrar nombre del jugador
+        const playerInfoDNIDisplay = document.getElementById('player-info-dni');   // Div para mostrar DNI del jugador
+        const validationMessage = document.getElementById('validation-message'); // Mensaje de validación
+        const nameAsterisk = document.getElementById('nameAsterisk'); // Asterisco de nombre
+        const dniAsterisk = document.getElementById('dniAsterisk');     // Asterisco de DNI
+        const cameraImage = document.getElementById('camera-image'); // Imagen de la cámara
+        const winMessageText = document.getElementById('win-message-text'); // Texto de "Toma una captura..."
+        const backgroundMusic = document.getElementById('background-music'); // Elemento de audio
+        const spawnSound = document.getElementById('spawn-sound'); // Sonido de spawn
+        const coinSound = document.getElementById('coin-sound');   // Sonido de coin
+        const loseSound = document.getElementById('lose-sound');   // Sonido de lose
+
+        // Controles móviles
+        const leftButton = document.getElementById('left-button');
+        const upButton = document.getElementById('up-button');
+        const rightButton = document.getElementById('right-button');
+        const mobileControls = document.getElementById('mobile-controls'); // Referencia a los controles móviles
+
+
+        /**
+         * Calcula y aplica el tamaño dinámico de los tiles y elementos del juego.
+         */
+        function resizeGameElements() {
+            // Obtener el tamaño actual del game-container (que ya es responsivo)
+            const containerWidth = gameContainer.offsetWidth;
+            const containerHeight = gameContainer.offsetHeight;
+
+            // Calcular el nuevo TILE_SIZE basado en el ancho del contenedor
+            // Dividimos el ancho real del contenedor por el número de tiles que queremos en el ancho (10)
+            TILE_SIZE = containerWidth / GAME_WIDTH_TILES_ORIGINAL;
+
+            // Actualizar el tamaño de los elementos basados en el nuevo TILE_SIZE
+            // Lanes
+            document.querySelectorAll('.lane').forEach(laneElement => {
+                laneElement.style.height = TILE_SIZE + 'px';
+            });
+
+            // Player
+            player.style.width = (TILE_SIZE * 0.9) + 'px'; // 90% del tile size
+            player.style.height = (TILE_SIZE * 0.9) + 'px';
+
+            // Obstacles
+            document.querySelectorAll('.obstacle').forEach(obsElement => {
+                // El width del obstáculo se calcula en generateLane, pero la altura debe ajustarse
+                obsElement.style.height = (TILE_SIZE * 0.9) + 'px'; // 90% del tile size
+            });
+
+            // Coins
+            document.querySelectorAll('.coin').forEach(coinElement => {
+                coinElement.style.width = (TILE_SIZE * 0.5) + 'px'; // 50% del tile size
+                coinElement.style.height = (TILE_SIZE * 0.5) + 'px';
+                // Reajustar la posición de la moneda para centrarla en el tile
+                coinElement.style.left = (parseFloat(coinElement.dataset.xTile) * TILE_SIZE + (TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px';
+                coinElement.style.top = ((TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px';
+            });
+
+            // Actualizar el tamaño de los elementos del score-board y mobile-controls
+            // para que también se escalen con el juego
+            const scoreBoard = document.getElementById('score-board');
+            const mobileControls = document.getElementById('mobile-controls');
+
+            // Ajusta el ancho de los elementos externos para que coincidan con el ancho escalado del game-container
+            scoreBoard.style.width = containerWidth + 'px';
+            mobileControls.style.width = containerWidth + 'px';
+
+            // Ajusta el tamaño de la fuente en el score-board y mobile-controls proporcionalmente
+            scoreBoard.style.fontSize = (TILE_SIZE * 0.6) + 'px'; // Ajusta el tamaño de la fuente
+            scoreBoard.querySelector('.score-text').style.fontSize = (TILE_SIZE * 0.45) + 'px';
+            scoreBoard.querySelector('.score-number').style.fontSize = (TILE_SIZE * 0.6) + 'px';
+            scoreBoard.querySelector('img').style.height = (TILE_SIZE * 1.25) + 'px'; // Escala el logo
+
+            mobileControls.querySelectorAll('.control-button').forEach(button => {
+                button.style.fontSize = (TILE_SIZE * 0.5) + 'px';
+                button.style.padding = (TILE_SIZE * 0.2) + 'px ' + (TILE_SIZE * 0.6) + 'px';
+                button.style.borderRadius = (TILE_SIZE * 0.25) + 'px';
+            });
+
+            // Re-posicionar el jugador con el nuevo TILE_SIZE
+            updatePlayerPosition();
+        }
+
+
         /**
          * Crea un elemento de carril (div) y lo añade al contenedor del juego.
          * @param {string} type - Tipo de carril ('grass' o 'road').
@@ -548,6 +617,7 @@
             const laneDiv = document.createElement('div');
             laneDiv.classList.add('lane', type);
             laneDiv.style.bottom = (yPos * TILE_SIZE) + 'px'; // Posicionar desde abajo
+            laneDiv.style.height = TILE_SIZE + 'px'; // Asegurar altura correcta
             gameContainer.appendChild(laneDiv);
             return laneDiv;
         }
@@ -561,7 +631,8 @@
         function createObstacleElement(lane, obsData) {
             const obsDiv = document.createElement('div');
             obsDiv.classList.add('obstacle', obsData.type);
-            obsDiv.style.width = (obsData.width * TILE_SIZE - 4) + 'px'; // -4 para el borde
+            obsDiv.style.width = (obsData.width * TILE_SIZE - (TILE_SIZE * 0.1)) + 'px'; // -10% del tile size para el borde/espacio
+            obsDiv.style.height = (TILE_SIZE * 0.9) + 'px'; // 90% del tile size
             // El color del obstáculo se define en CSS como negro
             obsDiv.style.position = 'absolute'; // Los obstáculos se posicionan absolutamente dentro de su carril
             lane.element.appendChild(obsDiv); // Añadir al elemento DOM del carril
@@ -578,8 +649,11 @@
             const coinDiv = document.createElement('div');
             coinDiv.classList.add('coin');
             // Posición izquierda ajustada para centrar la imagen de la moneda (20x20px)
-            coinDiv.style.left = (xPosTile * TILE_SIZE + (TILE_SIZE - 20) / 2) + 'px';
-            coinDiv.style.top = ((TILE_SIZE - 20) / 2) + 'px'; // Centrar verticalmente en el carril
+            coinDiv.style.left = (xPosTile * TILE_SIZE + (TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px'; // 50% del tile size
+            coinDiv.style.top = ((TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px'; // Centrar verticalmente en el carril
+            coinDiv.style.width = (TILE_SIZE * 0.5) + 'px';
+            coinDiv.style.height = (TILE_SIZE * 0.5) + 'px';
+            coinDiv.dataset.xTile = xPosTile; // Guardar la posición del tile para el reajuste
             lane.element.appendChild(coinDiv);
             return coinDiv;
         }
@@ -634,7 +708,7 @@
 
             // Generación de obstáculos
             if (type === 'road') {
-                let currentX = (laneData.direction === 1) ? -TILE_SIZE * 3 : GAME_WIDTH_TILES * TILE_SIZE;
+                let currentX = (laneData.direction === 1) ? -TILE_SIZE * 3 : GAME_WIDTH_TILES_ORIGINAL * TILE_SIZE; // Usar GAME_WIDTH_TILES_ORIGINAL
                 let numObstacles = 0;
 
                 // Ajustar el número de obstáculos según la dificultad
@@ -682,9 +756,9 @@
                             let attempts = 0;
                             // Intentar encontrar una posición única
                             do {
-                                coinXTile = Math.floor(Math.random() * GAME_WIDTH_TILES);
+                                coinXTile = Math.floor(Math.random() * GAME_WIDTH_TILES_ORIGINAL); // Usar GAME_WIDTH_TILES_ORIGINAL
                                 attempts++;
-                            } while (spawnedPositions.has(coinXTile) && attempts < GAME_WIDTH_TILES * 2); // Evitar bucle infinito
+                            } while (spawnedPositions.has(coinXTile) && attempts < GAME_WIDTH_TILES_ORIGINAL * 2); // Evitar bucle infinito
 
                             if (!spawnedPositions.has(coinXTile)) {
                                 const coinElement = createCoinElement(laneData, coinXTile);
@@ -706,7 +780,7 @@
                     const obsElement = createObstacleElement(laneData, obsTemplate);
                     
                     // Posicionar el obstáculo cuadrado aleatoriamente en el carril de hierba
-                    const obsXPos = Math.floor(Math.random() * (GAME_WIDTH_TILES - obsTemplate.width + 1)) * TILE_SIZE;
+                    const obsXPos = Math.floor(Math.random() * (GAME_WIDTH_TILES_ORIGINAL - obsTemplate.width + 1)) * TILE_SIZE; // Usar GAME_WIDTH_TILES_ORIGINAL
 
                     laneData.obstacles.push({
                         element: obsElement,
@@ -741,7 +815,7 @@
             player.style.left = (playerPos.x * TILE_SIZE) + 'px'; 
             player.style.bottom = (playerPos.y * TILE_SIZE) + 'px';
             // Combina la transformación de desplazamiento con la de escala para la dirección
-            const scrollOffset = Math.max(0, (playerPos.y - Math.floor(GAME_HEIGHT_TILES / 2.5)) * TILE_SIZE);
+            const scrollOffset = Math.max(0, (playerPos.y - Math.floor(GAME_HEIGHT_TILES_ORIGINAL / 2.5)) * TILE_SIZE); // Usar GAME_HEIGHT_TILES_ORIGINAL
             player.style.transform = `translateY(${scrollOffset}px) scaleX(${playerFacingDirection})`;
         }
 
@@ -764,7 +838,7 @@
             }
 
             // Comprobaciones de límites
-            if (newX < 0 || newX >= GAME_WIDTH_TILES) return;
+            if (newX < 0 || newX >= GAME_WIDTH_TILES_ORIGINAL) return; // Usar GAME_WIDTH_TILES_ORIGINAL
             if (newY < 0) return; // No se permite el movimiento hacia atrás
 
             playerPos.x = newX;
@@ -777,7 +851,7 @@
                     scoreDisplay.textContent = score;
 
                     // Comprobar si se necesitan generar nuevas filas
-                    if (lanes[lanes.length -1].y < playerPos.y + GAME_HEIGHT_TILES) {
+                    if (lanes[lanes.length -1].y < playerPos.y + GAME_HEIGHT_TILES_ORIGINAL) { // Usar GAME_HEIGHT_TILES_ORIGINAL
                        addNewLaneAtTop();
                     }
                 }
@@ -785,7 +859,7 @@
             
             // Desplazamiento de la pantalla: Mover todo el contenido del contenedor del juego
             // La transformación de desplazamiento de las lanes es independiente de la del player
-            const scrollOffset = Math.max(0, (playerPos.y - Math.floor(GAME_HEIGHT_TILES / 2.5)) * TILE_SIZE);
+            const scrollOffset = Math.max(0, (playerPos.y - Math.floor(GAME_HEIGHT_TILES_ORIGINAL / 2.5)) * TILE_SIZE); // Usar GAME_HEIGHT_TILES_ORIGINAL
             lanes.forEach(lane => {
                 lane.element.style.transform = `translateY(${scrollOffset}px)`;
             });
@@ -821,10 +895,10 @@
                     lane.obstacles.forEach(obs => {
                         obs.x += lane.speed * lane.direction; 
                         // Reiniciar la posición del obstáculo si se sale de la pantalla
-                        if (lane.direction === 1 && obs.x > GAME_WIDTH_TILES * TILE_SIZE) {
+                        if (lane.direction === 1 && obs.x > GAME_WIDTH_TILES_ORIGINAL * TILE_SIZE) { // Usar GAME_WIDTH_TILES_ORIGINAL
                             obs.x = -obs.width; // Reiniciar a la izquierda
                         } else if (lane.direction === -1 && obs.x + obs.width < 0) {
-                            obs.x = GAME_WIDTH_TILES * TILE_SIZE; // Reiniciar a la derecha
+                            obs.x = GAME_WIDTH_TILES_ORIGINAL * TILE_SIZE; // Reiniciar a la derecha // Usar GAME_WIDTH_TILES_ORIGINAL
                         }
                         obs.element.style.left = obs.x + 'px';
                     });
@@ -857,9 +931,9 @@
                 currentLane.coins.forEach((coin, index) => {
                     if (!coin.collected) {
                         const coinRect = {
-                            x: coin.x + (TILE_SIZE - 20) / 2, // X de la moneda es relativo al inicio del carril, ajustado para centrar
-                            y: currentLane.y * TILE_SIZE + (TILE_SIZE - 20) / 2, // Usar Y absoluto del carril, ajustado para centrar
-                            width: 20, height: 20
+                            x: coin.x + (TILE_SIZE - (TILE_SIZE * 0.5)) / 2, // X de la moneda es relativo al inicio del carril, ajustado para centrar
+                            y: currentLane.y * TILE_SIZE + (TILE_SIZE - (TILE_SIZE * 0.5)) / 2, // Usar Y absoluto del carril, ajustado para centrar
+                            width: (TILE_SIZE * 0.5), height: (TILE_SIZE * 0.5)
                         };
                          // Colisión AABB para la moneda
                         if (playerRect.x < coinRect.x + coinRect.width &&
@@ -990,6 +1064,7 @@
          * Reinicia el juego a su estado inicial.
          */
         function resetGame() {
+            console.log('resetGame called'); // Log para depuración
             // Validar campos de nombre y DNI solo si se está iniciando desde la pantalla de inicio
             if (!gameStarted) { // Solo validar en el primer inicio, no en reinicios desde game over
                 let isValid = true;
@@ -1017,7 +1092,7 @@
             }
 
 
-            playerPos = { x: Math.floor(GAME_WIDTH_TILES / 2), y: 1 }; // Posición inicial del jugador
+            playerPos = { x: Math.floor(GAME_WIDTH_TILES_ORIGINAL / 2), y: 1 }; // Posición inicial del jugador
             score = 0; // Reiniciar puntuación
             coins = 0; // Reiniciar monedas
             currentMaxY = playerPos.y; // Reiniciar la fila más lejana alcanzada
@@ -1126,9 +1201,14 @@
 
         // Envuelve los listeners en DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOMContentLoaded fired.'); // Log para depuración
             // Precargar la imagen de parpadeo para evitar el efecto de "desaparición"
             const preloadBlinkImage = new Image();
             preloadBlinkImage.src = playerEyesClosedURL;
+
+            // Llamar a resizeGameElements al inicio y en cada cambio de tamaño de ventana
+            resizeGameElements();
+            window.addEventListener('resize', resizeGameElements);
 
             // Añadir listeners de eventos
             restartButton.addEventListener('click', resetGame); // Botón de reinicio
@@ -1175,7 +1255,7 @@
             });
 
             // Configuración inicial al cargar la página
-            playerPos = { x: Math.floor(GAME_WIDTH_TILES / 2), y: 1 }; // Posición inicial del jugador
+            playerPos = { x: Math.floor(GAME_WIDTH_TILES_ORIGINAL / 2), y: 1 }; // Posición inicial del jugador
             initLanes(); // Inicializar las filas
             updatePlayerPosition(); // Actualizar posición del jugador
             // Inicializar el temporizador de parpadeo al cargar la página
