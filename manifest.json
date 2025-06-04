@@ -4,8 +4,8 @@
   "description": "Esquiva los obstáculos y come todas las burgers que puedas.",
   "start_url": "./index.html",
   "display": "fullscreen",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "player%20icono%20desktop.png",
