@@ -101,18 +101,17 @@
         }
         /* Marcador de puntuación */
         #score-board {
-            /* Ajuste de ancho para que se escale con el juego */
-            width: 90vmin; /* Usa el 90% de la dimensión más pequeña del viewport */
-            max-width: 400px; /* No más grande que el tamaño original */
-            
-            margin-top: 15px; /* Margen fijo, ya que el juego se escala con vmin */
+            margin-top: 10px; /* Ajuste para el escalado del juego */
             font-size: 24px; /* Tamaño base para los números */
             color: #000000; /* Texto negro para contraste */
             font-family: 'VT323', monospace; /* Aplicar fuente */
             display: flex; /* Usar flexbox para alinear elementos */
             justify-content: space-around; /* Espacio equitativo entre elementos */
             align-items: center; /* Alinear verticalmente */
+            width: 400px; /* Ancho igual al contenedor del juego */
             padding: 5px 0;
+            /* Ajuste de margen superior para compensar el escalado del juego */
+            margin-top: 15px; /* Margen fijo, ya que el juego se escala con vmin */
         }
         #score-board .score-item {
             display: flex;
@@ -943,33 +942,6 @@
         }
 
         /**
-         * Función para actualizar la animación de parpadeo del jugador.
-         */
-        function updatePlayerBlinking() {
-            if (gameOver || !gameStarted) {
-                player.style.backgroundImage = `url('${playerEyesOpenURL}')`; // Asegurar ojos abiertos si el juego no está activo
-                return;
-            }
-
-            if (!isPlayerBlinking) {
-                blinkTimer--;
-                if (blinkTimer <= 0) {
-                    isPlayerBlinking = true;
-                    blinkTimer = BLINK_DURATION; // Duración de los ojos cerrados
-                    player.style.backgroundImage = `url('${playerEyesClosedURL}')`;
-                }
-            } else {
-                blinkTimer--;
-                if (blinkTimer <= 0) {
-                    isPlayerBlinking = false;
-                    // Intervalo aleatorio para el próximo parpadeo
-                    blinkTimer = Math.floor(Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN + 1)) + BLINK_INTERVAL_MIN;
-                    player.style.backgroundImage = `url('${playerEyesOpenURL}')`;
-                }
-            }
-        }
-
-        /**
          * El bucle principal del juego, que se ejecuta en cada frame de animación.
          */
         function gameLoop() {
@@ -1119,6 +1091,10 @@
 
         // Envuelve los listeners en DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
+            // Precargar la imagen de parpadeo para evitar el efecto de "desaparición"
+            const preloadBlinkImage = new Image();
+            preloadBlinkImage.src = playerEyesClosedURL;
+
             // Añadir listeners de eventos
             restartButton.addEventListener('click', resetGame); // Botón de reinicio
             
