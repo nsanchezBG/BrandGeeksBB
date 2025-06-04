@@ -38,8 +38,10 @@
             /* --- INICIO: ESTILOS RESPONSIVOS ACTUALIZADOS --- */
             width: 90vmin; /* Usa el 90% de la dimensión más pequeña del viewport (ancho o alto) */
             height: calc(90vmin * 1.5); /* Mantiene la relación de aspecto 4:6 (600/400 = 1.5) */
-            max-width: 400px; /* No permite que el juego sea más grande que su tamaño original */
-            max-height: 600px; /* No permite que el juego sea más grande que su tamaño original */
+            /* Eliminamos max-width y max-height para permitir que crezca más allá de los 400x600px */
+            /* si la pantalla es lo suficientemente grande, pero manteniendo la proporción */
+            /* max-width: 400px; */ 
+            /* max-height: 600px; */
             /* --- FIN: ESTILOS RESPONSIVOS ACTUALIZADOS --- */
 
             background-color: #ffffff; /* Color de fondo blanco para las filas */
@@ -99,18 +101,18 @@
         }
         /* Marcador de puntuación */
         #score-board {
-            margin-top: 10px; /* Ajuste para el escalado del juego */
+            /* Ajuste de ancho para que se escale con el juego */
+            width: 90vmin; /* Usa el 90% de la dimensión más pequeña del viewport */
+            max-width: 400px; /* No más grande que el tamaño original */
+            
+            margin-top: 15px; /* Margen fijo, ya que el juego se escala con vmin */
             font-size: 24px; /* Tamaño base para los números */
             color: #000000; /* Texto negro para contraste */
             font-family: 'VT323', monospace; /* Aplicar fuente */
             display: flex; /* Usar flexbox para alinear elementos */
             justify-content: space-around; /* Espacio equitativo entre elementos */
             align-items: center; /* Alinear verticalmente */
-            /* Ajuste de ancho para que se escale con el juego */
-            width: min(90vmin, 400px); 
             padding: 5px 0;
-            /* Ajuste de margen superior para compensar el escalado del juego */
-            margin-top: 15px; /* Margen fijo, ya que el juego se escala con vmin */
         }
         #score-board .score-item {
             display: flex;
