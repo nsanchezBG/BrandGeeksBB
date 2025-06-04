@@ -35,8 +35,13 @@
         }
         /* Contenedor principal del juego */
         #game-container {
-            width: 400px; /* 10 tiles de ancho */
-            height: 600px; /* 15 tiles de alto */
+            /* --- INICIO: ESTILOS RESPONSIVOS ACTUALIZADOS --- */
+            width: 90vmin; /* Usa el 90% de la dimensión más pequeña del viewport (ancho o alto) */
+            height: calc(90vmin * 1.5); /* Mantiene la relación de aspecto 4:6 (600/400 = 1.5) */
+            max-width: 400px; /* No permite que el juego sea más grande que su tamaño original */
+            max-height: 600px; /* No permite que el juego sea más grande que su tamaño original */
+            /* --- FIN: ESTILOS RESPONSIVOS ACTUALIZADOS --- */
+
             background-color: #ffffff; /* Color de fondo blanco para las filas */
             position: relative;
             overflow: hidden;
@@ -46,13 +51,6 @@
             touch-action: none; 
             /* Por defecto, no recibe eventos de puntero hasta que el juego inicia */
             pointer-events: none; 
-
-            /* --- INICIO: ESTILOS RESPONSIVOS --- */
-            /* Escala el contenedor para que se ajuste a la pantalla, manteniendo la proporción */
-            transform-origin: center center;
-            transform: scale(min(1, calc(90vw / 400), calc(90vh / 600))); 
-            /* El 90vw/90vh es para dejar un pequeño margen alrededor del juego */
-            /* --- FIN: ESTILOS RESPONSIVOS --- */
         }
         /* Estilo para cada carril (fila) */
         .lane {
@@ -108,10 +106,11 @@
             display: flex; /* Usar flexbox para alinear elementos */
             justify-content: space-around; /* Espacio equitativo entre elementos */
             align-items: center; /* Alinear verticalmente */
-            width: 400px; /* Ancho igual al contenedor del juego */
+            /* Ajuste de ancho para que se escale con el juego */
+            width: min(90vmin, 400px); 
             padding: 5px 0;
             /* Ajuste de margen superior para compensar el escalado del juego */
-            margin-top: calc(10px * min(1, calc(90vh / 600))); /* Escala el margen con el juego */
+            margin-top: 15px; /* Margen fijo, ya que el juego se escala con vmin */
         }
         #score-board .score-item {
             display: flex;
