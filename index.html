@@ -588,8 +588,10 @@
         let rightButton;
 
         // --- INICIO: Configuración de Google Sheets / Apps Script ---
-        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxUVG_I0HyMxd-c2Wr9BKVsOqjBVT8FdsjFaccUJp2GDcv6kMah4l30-gbLgO4Xi9aM/exec'; // URL de tu Apps Script
-        const SPREADSHEET_ID = '1VAU3X8HdUMwcH2T9-3bitYXvfBQ7oB6-oAxSlxV2ISA'; // ID de tu Google Sheet
+        // ¡TU URL DE APPS SCRIPT AQUÍ!
+        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxUVG_I0HyMxd-c2Wr9BKVsOqjBVT8FdsjFaccUJp2GDcv6kMah4l30-gbLgO4Xi9aM/exec'; 
+        // ¡TU ID DE GOOGLE SHEET AQUÍ!
+        const SPREADSHEET_ID = '1VAU3X8HdUMwcH2T9-3bitYXvfBQ7oB6-oAxSlxV2ISA'; 
         // --- FIN: Configuración de Google Sheets / Apps Script ---
 
         /**
@@ -656,13 +658,14 @@
                 scores.forEach((scoreEntry, index) => {
                     const listItemName = document.createElement('li');
                     listItemName.classList.add('leaderboard-name');
-                    listItemName.textContent = `${index + 1}. ${scoreEntry.Nombre || 'Anónimo'}`; // Usar scoreEntry.Nombre
-                    leaderboardList.appendChild(listItemName); // Añadir a la lista
+                    // 'Nombre' y 'Puntaje' son los nombres de las propiedades esperadas del JSON de Apps Script
+                    listItemName.textContent = `${index + 1}. ${scoreEntry.Nombre || 'Anónimo'}`; 
+                    leaderboardList.appendChild(listItemName); 
 
                     const listItemScore = document.createElement('li');
                     listItemScore.classList.add('leaderboard-score');
-                    listItemScore.textContent = scoreEntry.Puntaje || 0; // Usar scoreEntry.Puntaje
-                    leaderboardList.appendChild(listItemScore); // Añadir a la lista
+                    listItemScore.textContent = scoreEntry.Puntaje || 0; 
+                    leaderboardList.appendChild(listItemScore); 
                 });
             } else {
                 leaderboardList.innerHTML = '<li>No hay puntuaciones aún.</li>';
@@ -1295,44 +1298,11 @@
         let touchStartY = 0;
         const SWIPE_THRESHOLD = 30; // Mínima distancia para considerar un deslizamiento
 
-        // Ahora los listeners de touch están en gameContainer, que es el área de juego
-        gameContainer.addEventListener('touchstart', (e) => {
-            // Prevenir el desplazamiento de la página al tocar el contenedor del juego
-            e.preventDefault(); 
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        }, { passive: false }); // Usar { passive: false } para permitir preventDefault
-
-        gameContainer.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // Prevenir el desplazamiento de la página durante el deslizamiento
-        }, { passive: false });
-
-        gameContainer.addEventListener('touchend', (e) => {
-            if (gameOver || !gameStarted) return;
-
-            const touchEndX = e.changedTouches[0].clientX;
-            const touchEndY = e.changedTouches[0].clientY;
-
-            const dx = touchEndX - touchStartX;
-            const dy = touchEndY - touchStartY;
-
-            // Determinar si es un deslizamiento horizontal o vertical
-            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
-                // Deslizamiento horizontal
-                if (dx > 0) {
-                    movePlayer(1, 0); // Deslizar a la derecha
-                } else {
-                    movePlayer(-1, 0); // Deslizar a la izquierda
-                }
-            } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > SWIPE_THRESHOLD) { 
-                // Deslizamiento vertical
-                if (dy < 0) { // Deslizar hacia arriba (Y disminuye)
-                    movePlayer(0, 1); // Mover hacia adelante
-                }
-                // No hay movimiento hacia abajo en este juego
-            }
-        });
-        // --- Fin Lógica de Control Táctil ---
+        // Estos listeners se adjuntan en DOMContentLoaded
+        // Por lo tanto, las referencias a gameContainer, etc. deben ser variables declaradas arriba (let)
+        // y asignadas dentro de DOMContentLoaded para evitar "Cannot read properties of undefined"
+        // ya que al inicio del script son undefined
+        // gameContainer.addEventListener('touchstart', (e) => { ... }); // MOVIDO A DOMContentLoaded
 
         // Envuelve los listeners en DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
@@ -1381,21 +1351,70 @@
             startButton.addEventListener('click', resetGame); 
 
             // Event listeners para los nuevos botones de control móvil
-            leftButton.addEventListener('click', () => {
-                if (gameStarted && !gameOver) {
-                    movePlayer(-1, 0);
-                }
-            });
-            upButton.addEventListener('click', () => {
-                if (gameStarted && !gameOver) {
-                    movePlayer(0, 1);
-                }
-            });
-            rightButton.addEventListener('click', () => {
-                if (gameStarted && !gameOver) {
-                    movePlayer(1, 0);
-                }
-            });
+            // Estos listeners MOVIDOS DENTRO de DOMContentLoaded
+            if (gameContainer) { // Verificar que gameContainer no sea null antes de adjuntar listeners de touch
+                gameContainer.addEventListener('touchstart', (e) => {
+                    // Prevenir el desplazamiento de la página al tocar el contenedor del juego
+                    e.preventDefault(); 
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                }, { passive: false }); // Usar { passive: false } para permitir preventDefault
+
+                gameContainer.addEventListener('touchmove', (e) => {
+                    e.preventDefault(); // Prevenir el desplazamiento de la página durante el deslizamiento
+                }, { passive: false });
+
+                gameContainer.addEventListener('touchend', (e) => {
+                    if (gameOver || !gameStarted) return;
+
+                    const touchEndX = e.changedTouches[0].clientX;
+                    const touchEndY = e.changedTouches[0].clientY;
+
+                    const dx = touchEndX - touchStartX;
+                    const dy = touchEndY - touchStartY;
+
+                    // Determinar si es un deslizamiento horizontal o vertical
+                    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
+                        // Deslizamiento horizontal
+                        if (dx > 0) {
+                            movePlayer(1, 0); // Deslizar a la derecha
+                        } else {
+                            movePlayer(-1, 0); // Deslizar a la izquierda
+                        }
+                    } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > SWIPE_THRESHOLD) { 
+                        // Deslizamiento vertical
+                        if (dy < 0) { // Deslizar hacia arriba (Y disminuye)
+                            movePlayer(0, 1); // Mover hacia adelante
+                        }
+                        // No hay movimiento hacia abajo en este juego
+                    }
+                });
+            }
+            // --- Fin Lógica de Control Táctil ---
+
+
+            // Event listeners para los nuevos botones de control móvil
+            if (leftButton) {
+                leftButton.addEventListener('click', () => {
+                    if (gameStarted && !gameOver) {
+                        movePlayer(-1, 0);
+                    }
+                });
+            }
+            if (upButton) {
+                upButton.addEventListener('click', () => {
+                    if (gameStarted && !gameOver) {
+                        movePlayer(0, 1);
+                    }
+                });
+            }
+            if (rightButton) {
+                rightButton.addEventListener('click', () => {
+                    if (gameStarted && !gameOver) {
+                        movePlayer(1, 0);
+                    }
+                });
+            }
 
             // Control de movimiento del jugador con las teclas de flecha (para PC)
             document.addEventListener('keydown', (e) => {
