@@ -38,19 +38,21 @@
             font-family: 'VT323', monospace; /* Fuente principal del juego */
         }
         /* Nuevo contenedor para escalar todo el juego y la UI */
-        #game-and-ui-wrapper {
+        #main-game-wrapper {
             /* Dimensiones base "ideales" para el escalado */
             width: 400px; 
-            /* Altura total ideal: 600px (juego) + 15px (margen cont.) + 60px (controles) + 15px (margen cont.) + 80px (marcador) = ~770px */
-            height: 770px; /* Altura calculada para contener todo */
+            /* Altura total ideal: 600px (juego) + 15px (margen controles) + 36px (controles) + 15px (margen marcador) + 110px (marcador) = ~771px */
+            height: 771px; /* Altura calculada para contener todo */
             display: flex;
             flex-direction: column;
             align-items: center; /* Centrar los elementos internos */
             justify-content: flex-start; /* Alinear arriba para el contenido del juego */
 
             /* Aplicar el escalado a todo el wrapper */
-            transform-origin: center center;
-            transform: scale(min(1, calc(100vw / 400), calc(100vh / 770)));
+            /* Se eliminan position, left, top, translate para centrado por flexbox del body */
+            margin: auto; 
+            transform: scale(min(1, calc(100vw / 400), calc(100vh / 771)));
+            transform-origin: center center; /* Asegurar que el escalado y traslación sean desde el centro */
             box-sizing: border-box; /* Asegurar que el padding se incluya en el tamaño */
         }
 
@@ -116,17 +118,17 @@
         /* Marcador de puntuación */
         #score-board {
             /* Anchura fija, se escalará con el wrapper */
-            width: 400px;
+            width: 400px; /* Coincide con el ancho del game-container */
             
-            margin: 10px auto; /* Margen superior y centrado automático */
+            margin-top: 10px; /* Margen superior y centrado automático */
             font-size: 24px; /* Tamaño base para los números */
             color: #000000; /* Texto negro para contraste */
             font-family: 'VT323', monospace; /* Aplicar fuente */
             display: flex; /* Usar flexbox para alinear elementos */
-            justify-content: center; /* --- CENTRADO ACTUALIZADO --- */
+            justify-content: center; /* Centrar los elementos del marcador */
             align-items: center; /* Alinear verticalmente */
             padding: 5px 0;
-            gap: 10px; /* --- ESPACIADO ACTUALIZADO --- */
+            gap: 10px; /* Espaciado entre elementos */
         }
         #score-board .score-item {
             display: flex;
@@ -136,7 +138,7 @@
             gap: 0px; /* Eliminar espacio entre texto y número */
         }
         #score-board .score-text {
-            font-size: 24px; /* --- TAMAÑO ACTUALIZADO: Igual que el número --- */
+            font-size: 24px; /* TAMAÑO ACTUALIZADO: Igual que el número */
             line-height: 1; /* Ajustar altura de línea para compactar */
         }
         #score-board .score-number {
@@ -168,6 +170,12 @@
             pointer-events: auto; /* Asegura que reciba clics cuando está visible */
             padding: 20px; /* Añadir padding para evitar que el texto toque los bordes */
             box-sizing: border-box;
+        }
+        #game-over-message h2 { /* Título GAME OVER */
+            font-size: 48px; /* Tamaño grande para GAME OVER */
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px #000;
         }
         #game-over-message p {
             font-size: 32px; /* Texto más grande */
@@ -212,6 +220,47 @@
             background-color: #e0e0e0;
             box-shadow: 0 0 7px rgba(0,0,0,0.4);
         }
+        /* Estilo para la sección del Leaderboard */
+        #leaderboard-section {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 350px; /* Ancho para el leaderboard */
+            color: white;
+            font-family: 'VT323', monospace;
+            text-align: center;
+            border: 2px solid white;
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: rgba(0,0,0,0.5);
+        }
+        #leaderboard-section h3 {
+            font-size: 28px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px #000;
+        }
+        #leaderboard-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Dos columnas */
+            gap: 5px 10px; /* Espacio entre filas y columnas */
+            font-size: 24px;
+            list-style: none; /* Eliminar viñetas */
+            padding: 0;
+            margin: 0;
+        }
+        #leaderboard-list li {
+            text-align: center;
+            white-space: nowrap; /* Evitar que el texto se rompa */
+            overflow: hidden; /* Ocultar el desbordamiento */
+            text-overflow: ellipsis; /* Mostrar puntos suspensivos si se desborda */
+        }
+        #leaderboard-list li.leaderboard-name { /* Nombres en la columna izquierda */
+            text-align: right;
+        }
+        #leaderboard-list li.leaderboard-score { /* Puntajes en la columna derecha */
+            text-align: left;
+        }
+
         /* Pantalla de inicio */
         #start-screen {
             position: fixed; /* Posicionamiento fijo para cubrir toda la ventana */
@@ -402,7 +451,7 @@
     </div>
 
     <div id="game-over-message">
-        <p id="game-over-text"></p> 
+        <h2>GAME OVER</h2> <!-- Título fijo GAME OVER -->
         <div class="spacer"></div> 
         <p>Tu puntaje final: <span id="final-score">0</span></p>
         <div class="spacer"></div> 
@@ -413,10 +462,17 @@
         <div class="spacer"></div> 
         <img id="camera-image" src="camera.png" alt="Camera Icon">
         <p id="win-message-text"></p> 
+        <div id="leaderboard-section">
+            <h3>MEJORES PUNTUACIONES</h3>
+            <ul id="leaderboard-list">
+                <!-- Los elementos del leaderboard se insertarán aquí por JavaScript -->
+                <li>Cargando...</li> 
+            </ul>
+        </div>
         <button id="restart-button" disabled>Reiniciar</button> </div>
 
     <!-- Nuevo wrapper para escalar todo el juego y la UI -->
-    <div id="game-and-ui-wrapper">
+    <div id="main-game-wrapper">
         <div id="game-container">
             <div id="player"></div>
             </div>
@@ -473,7 +529,7 @@
 
         // --- INICIO: DECLARACIONES DE CONSTANTES Y VARIABLES GLOBALES (MOVIDAS AL PRINCIPIO) ---
         // Constantes del juego
-        let TILE_SIZE; // Ahora es dinámico
+        const TILE_SIZE = 40; // TILE_SIZE vuelve a ser fijo, ya que el escalado es global
         const GAME_WIDTH_TILES_ORIGINAL = 10; // Ancho original en baldosas (para cálculos de TILE_SIZE)
         const GAME_HEIGHT_TILES_ORIGINAL = 15; // Alto original en baldosas (para cálculos de TILE_SIZE)
         const TOTAL_LANES_BUFFER = 20; // Número total de filas generadas (incluye las fuera de pantalla)
@@ -545,39 +601,120 @@
         const coinSound = document.getElementById('coin-sound');   // Sonido de coin
         const loseSound = document.getElementById('lose-sound');   // Sonido de lose
 
+        // Referencias a los elementos del leaderboard
+        const leaderboardSection = document.getElementById('leaderboard-section');
+        const leaderboardList = document.getElementById('leaderboard-list');
+
         // Controles móviles
         const leftButton = document.getElementById('left-button');
         const upButton = document.getElementById('up-button');
         const rightButton = document.getElementById('right-button');
         const mobileControls = document.getElementById('mobile-controls'); // Referencia a los controles móviles
 
+        // --- INICIO: Configuración de Google Sheets / Apps Script ---
+        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxUVG_I0HyMxd-c2Wr9BKVsOqjBVT8FdsjFaccUJ2GDcv6kMah4l30-gbLgO4Xi9aM/exec'; // ¡TU URL DE APPS SCRIPT AQUÍ!
+        const SPREADSHEET_ID = '1VAU3X8HdUMwcH2T9-3bitYXvfBQ7oB6-oAxSlxV2ISA'; // ¡TU ID DE GOOGLE SHEET AQUÍ!
+        // --- FIN: Configuración de Google Sheets / Apps Script ---
+
+        /**
+         * Envía el puntaje del jugador a Google Sheets a través de Google Apps Script.
+         * @param {string} playerName - Nombre del jugador.
+         * @param {string} playerDNI - DNI del jugador.
+         * @param {number} finalScore - Puntaje final del jugador.
+         */
+        async function sendScoreToGoogleSheets(playerName, playerDNI, finalScore) {
+            try {
+                const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Necesario para evitar errores CORS en App Script simple
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        playerName: playerName,
+                        playerDNI: playerDNI,
+                        finalScore: finalScore
+                    }),
+                });
+                // Dado que mode: 'no-cors' se usa, no podemos leer la respuesta real
+                // pero la solicitud se envía.
+                console.log('Datos enviados a Google Sheets (respuesta no verificable debido a no-cors).');
+            } catch (error) {
+                console.error('Error al enviar datos a Google Sheets:', error);
+            }
+        }
+
+        /**
+         * Obtiene las mejores puntuaciones de Google Sheets a través de Google Apps Script.
+         */
+        async function fetchLeaderboard() {
+            if (!leaderboardList) {
+                console.error("Leaderboard list element not found.");
+                return;
+            }
+            leaderboardList.innerHTML = '<li>Cargando...</li>'; // Mostrar mensaje de carga
+            try {
+                const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+                    method: 'GET',
+                    mode: 'cors' // 'cors' sí permite leer la respuesta
+                });
+                const scores = await response.json();
+                displayLeaderboard(scores);
+            } catch (error) {
+                console.error('Error al obtener el leaderboard:', error);
+                leaderboardList.innerHTML = '<li>Error al cargar el leaderboard.</li>';
+            }
+        }
+
+        /**
+         * Muestra las puntuaciones del leaderboard en la lista.
+         * @param {Array<Object>} scores - Array de objetos con las puntuaciones (ej. [{Nombre: "...", Puntaje: ...}]).
+         */
+        function displayLeaderboard(scores) {
+            if (!leaderboardList) { // Verificar si el elemento existe antes de manipularlo
+                console.error("Leaderboard list element not found for displayLeaderboard.");
+                return;
+            }
+            leaderboardList.innerHTML = ''; // Limpiar lista existente
+            if (scores && scores.length > 0) {
+                scores.forEach((scoreEntry, index) => {
+                    const listItemName = document.createElement('li');
+                    listItemName.classList.add('leaderboard-name');
+                    listItemName.textContent = `${index + 1}. ${scoreEntry.Nombre || 'Anónimo'}`; // Usar scoreEntry.Nombre
+                    leaderboardList.appendChild(listItemName); // Añadir a la lista
+
+                    const listItemScore = document.createElement('li');
+                    listItemScore.classList.add('leaderboard-score');
+                    listItemScore.textContent = scoreEntry.Puntaje || 0; // Usar scoreEntry.Puntaje
+                    leaderboardList.appendChild(listItemScore); // Añadir a la lista
+                });
+            } else {
+                leaderboardList.innerHTML = '<li>No hay puntuaciones aún.</li>';
+            }
+        }
+
 
         /**
          * Calcula y aplica el tamaño dinámico de los tiles y elementos del juego.
          */
         function resizeGameElements() {
-            // Obtener el tamaño actual del game-container (que ahora es responsivo)
-            const containerWidth = gameContainer.offsetWidth;
-            const containerHeight = gameContainer.offsetHeight;
-
-            // Calcular el nuevo TILE_SIZE basado en el ancho del contenedor
-            // Dividimos el ancho real del contenedor por el número de tiles que queremos en el ancho (10)
-            TILE_SIZE = containerWidth / GAME_WIDTH_TILES_ORIGINAL;
-
-            // Actualizar el tamaño de los elementos basados en el nuevo TILE_SIZE
-            // Lanes
-            document.querySelectorAll('.lane').forEach(laneElement => {
-                laneElement.style.height = TILE_SIZE + 'px';
-            });
+            // TILE_SIZE ya es una constante global fija de 40px
+            // Esta función ahora solo asegura que los elementos del juego se posicionen correctamente
+            // y que los elementos de UI externos ajusten su ancho para coincidir con el contenedor del juego.
 
             // Player
             player.style.width = (TILE_SIZE * 0.9) + 'px'; // 90% del tile size
             player.style.height = (TILE_SIZE * 0.9) + 'px';
 
+            // Lanes
+            document.querySelectorAll('.lane').forEach(laneElement => {
+                laneElement.style.height = TILE_SIZE + 'px';
+            });
+
             // Obstacles
             document.querySelectorAll('.obstacle').forEach(obsElement => {
-                // El width del obstáculo se calcula en generateLane, pero la altura debe ajustarse
-                obsElement.style.height = (TILE_SIZE * 0.9) + 'px'; // 90% del tile size
+                obsElement.style.width = (obsElement.dataset.originalWidth * TILE_SIZE - (TILE_SIZE * 0.1)) + 'px';
+                obsElement.style.height = (TILE_SIZE * 0.9) + 'px';
             });
 
             // Coins
@@ -588,19 +725,21 @@
                 coinElement.style.left = (parseFloat(coinElement.dataset.xTile) * TILE_SIZE + (TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px';
                 coinElement.style.top = ((TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px';
             });
+            
+            // Re-posicionar el jugador con el nuevo TILE_SIZE (aunque TILE_SIZE es fijo, esto es buena práctica)
+            updatePlayerPosition();
 
-            // Actualizar el tamaño de los elementos del score-board y mobile-controls
-            // para que también se escalen con el juego
+            // Ajustar el ancho de los elementos externos para que coincidan con el ancho del game-container (400px)
             const scoreBoard = document.getElementById('score-board');
             const mobileControls = document.getElementById('mobile-controls');
 
             // Ajusta el ancho de los elementos externos para que coincidan con el ancho escalado del game-container
-            scoreBoard.style.width = containerWidth + 'px';
-            mobileControls.style.width = containerWidth + 'px';
+            scoreBoard.style.width = gameContainer.offsetWidth + 'px'; // Usar el offsetWidth del gameContainer
+            mobileControls.style.width = gameContainer.offsetWidth + 'px'; // Usar el offsetWidth del gameContainer
 
             // Ajusta el tamaño de la fuente en el score-board y mobile-controls proporcionalmente
             scoreBoard.style.fontSize = (TILE_SIZE * 0.6) + 'px'; // Ajusta el tamaño de la fuente
-            scoreBoard.querySelector('.score-text').style.fontSize = (TILE_SIZE * 0.6) + 'px'; // Ajustado a 0.6 para que sea igual que el número
+            scoreBoard.querySelector('.score-text').style.fontSize = (TILE_SIZE * 0.6) + 'px'; 
             scoreBoard.querySelector('.score-number').style.fontSize = (TILE_SIZE * 0.6) + 'px';
             scoreBoard.querySelector('img').style.height = (TILE_SIZE * 1.25) + 'px'; // Escala el logo
 
@@ -609,9 +748,6 @@
                 button.style.padding = (TILE_SIZE * 0.2) + 'px ' + (TILE_SIZE * 0.6) + 'px';
                 button.style.borderRadius = (TILE_SIZE * 0.25) + 'px';
             });
-
-            // Re-posicionar el jugador con el nuevo TILE_SIZE
-            updatePlayerPosition();
         }
 
 
@@ -641,6 +777,7 @@
             obsDiv.classList.add('obstacle', obsData.type);
             obsDiv.style.width = (obsData.width * TILE_SIZE - (TILE_SIZE * 0.1)) + 'px'; // -10% del tile size para el borde/espacio
             obsDiv.style.height = (TILE_SIZE * 0.9) + 'px'; // 90% del tile size
+            obsDiv.dataset.originalWidth = obsData.width; // Guardar para reajuste en resizeGameElements
             // El color del obstáculo se define en CSS como negro
             obsDiv.style.position = 'absolute'; // Los obstáculos se posicionan absolutamente dentro de su carril
             lane.element.appendChild(obsDiv); // Añadir al elemento DOM del carril
@@ -986,7 +1123,7 @@
         /**
          * Establece el estado del juego a "terminado" y muestra el mensaje de fin de juego.
          */
-        function setGameOver() {
+        async function setGameOver() { // Marcar como async para await fetchLeaderboard
             gameOver = true;
             gameStarted = false;
             cancelAnimationFrame(gameLoopId); // Detener el bucle del juego
@@ -995,8 +1132,9 @@
             finalScoreDisplay.textContent = finalScore;
 
             // Mostrar información del jugador
-            playerInfoNameDisplay.textContent = currentPlayerName;
-            playerInfoDNIDisplay.textContent = currentPlayerDNI;
+            // Asegúrate de que playerInfoNameDisplay y playerInfoDNIDisplay no sean null
+            if (playerInfoNameDisplay) playerInfoNameDisplay.textContent = currentPlayerName;
+            if (playerInfoDNIDisplay) playerInfoDNIDisplay.textContent = currentPlayerDNI;
 
             // Ocultar controles móviles
             mobileControls.style.display = 'none';
@@ -1011,22 +1149,27 @@
 
             // Cambiar la condición de victoria a 150 puntos
             if (finalScore >= 150) { 
-                gameOverText.textContent = "¡GANASTE!";
-                winMessageText.textContent = "Toma una captura a esta pantalla o déjala abierta y acércate a nuestro stand.";
-                winMessageText.style.display = 'block'; // Mostrar texto de "Toma una captura..."
-                cameraImage.style.display = 'block'; // Mostrar imagen de cámara si ganó
+                if (gameOverText) gameOverText.textContent = "¡GANASTE!";
+                if (winMessageText) winMessageText.textContent = "Toma una captura a esta pantalla o déjala abierta y acércate a nuestro stand.";
+                if (winMessageText) winMessageText.style.display = 'block'; // Mostrar texto de "Toma una captura..."
+                if (cameraImage) cameraImage.style.display = 'block'; // Mostrar imagen de cámara si ganó
             } else {
-                gameOverText.textContent = "¡Perdiste!";
-                winMessageText.style.display = 'none'; // Ocultar texto de "Toma una captura..."
-                cameraImage.style.display = 'none'; // Ocultar imagen de cámara si perdió
+                if (gameOverText) gameOverText.textContent = "GAME OVER"; // Siempre "GAME OVER" si no gana
+                if (winMessageText) winMessageText.style.display = 'none'; // Ocultar texto de "Toma una captura..."
+                if (cameraImage) cameraImage.style.display = 'none'; // Ocultar imagen de cámara si perdió
             }
 
             gameOverMessage.style.display = 'flex'; // Mostrar el mensaje de fin de juego (now with display: flex)
             
+            // Enviar puntuación antes de obtener el leaderboard
+            await sendScoreToGoogleSheets(currentPlayerName, currentPlayerDNI, finalScore);
+            // Obtener y mostrar el leaderboard
+            await fetchLeaderboard();
+
             // Habilitar el botón de reiniciar después de un breve retraso
-            restartButton.disabled = true; // Asegurarse de que esté deshabilitado al mostrar la pantalla
+            if (restartButton) restartButton.disabled = true; // Asegurarse de que esté deshabilitado al mostrar la pantalla
             setTimeout(() => {
-                restartButton.disabled = false; // Habilitar el botón después de 500ms
+                if (restartButton) restartButton.disabled = false; // Habilitar el botón después de 500ms
             }, 500); // Retraso de 0.5 segundos
         }
 
@@ -1077,21 +1220,21 @@
             if (!gameStarted) { // Solo validar en el primer inicio, no en reinicios desde game over
                 let isValid = true;
                 // Ocultar mensajes de validación y asteriscos
-                validationMessage.style.display = 'none';
-                nameAsterisk.style.display = 'none';
-                dniAsterisk.style.display = 'none';
+                if (validationMessage) validationMessage.style.display = 'none';
+                if (nameAsterisk) nameAsterisk.style.display = 'none';
+                if (dniAsterisk) dniAsterisk.style.display = 'none';
 
                 if (!playerNameInput.value.trim()) {
-                    nameAsterisk.style.display = 'inline';
+                    if (nameAsterisk) nameAsterisk.style.display = 'inline';
                     isValid = false;
                 }
                 if (!playerDNIInput.value.trim()) {
-                    dniAsterisk.style.display = 'inline';
+                    if (dniAsterisk) dniAsterisk.style.display = 'inline';
                     isValid = false;
                 }
 
                 if (!isValid) {
-                    validationMessage.style.display = 'block';
+                    if (validationMessage) validationMessage.style.display = 'block';
                     console.error('Validación fallida: Campos requeridos no rellenados.'); // Log de error para depuración
                     return; // No iniciar el juego si los campos están vacíos
                 }
