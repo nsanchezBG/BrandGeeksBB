@@ -49,7 +49,7 @@
             justify-content: flex-start; /* Alinear arriba para el contenido del juego */
 
             /* Aplicar el escalado a todo el wrapper */
-            /* Centrado utilizando margin: auto; dentro de un body flex */
+            /* Se eliminan position, left, top, translate para centrado por flexbox del body */
             margin: auto; 
             transform: scale(min(1, calc(100vw / 400), calc(100vh / 771)));
             transform-origin: center center; /* Asegurar que el escalado y traslación sean desde el centro */
@@ -187,13 +187,26 @@
             height: 1em; /* Altura de una línea de texto */
             width: 100%; /* Asegurar que ocupe espacio */
         }
-        /* Eliminados player-info-name y player-info-dni de la pantalla final */
-        /* Eliminados camera-image y win-message-text de la pantalla final */
-
+        #game-over-message #player-info-name,
+        #game-over-message #player-info-dni {
+            font-size: 32px; /* Mismo tamaño que el texto principal */
+            margin: 0; /* Controlar espaciado con .spacer */
+        }
+        #game-over-message #camera-image {
+            width: 75px; /* Mitad del ancho del botón Reiniciar */
+            height: auto;
+            margin: 15px auto; /* Centrar y dar margen */
+            display: block; /* Asegurar que se muestre como bloque para centrar */
+        }
+        #game-over-message #win-message-text {
+            font-size: 32px; /* Mismo tamaño que el texto principal */
+            margin-top: 0; /* Controlar espaciado con .spacer o margen de imagen */
+            margin-bottom: 20px; /* Espacio antes del botón Reiniciar */
+        }
         #game-over-message button {
             padding: 15px 30px; /* Botón más grande */
             font-size: 24px; /* Texto del botón más grande */
-            margin-top: 20px; /* Espacio antes del botón Reiniciar */
+            margin-top: 0; /* Ya hay margen en el texto de arriba */
             cursor: pointer;
             background-color: #ffffff; /* Botón blanco */
             color: #000000; /* Texto negro */
@@ -442,8 +455,13 @@
         <div class="spacer"></div> 
         <p>Tu puntaje final: <span id="final-score">0</span></p>
         <div class="spacer"></div> 
-        <!-- Eliminados player-info-name y player-info-dni de la pantalla final -->
-        <!-- Eliminados camera-image y win-message-text de la pantalla final -->
+        <p>NOMBRE:</p>
+        <p id="player-info-name"></p> 
+        <p>DNI / CE:</p>
+        <p id="player-info-dni"></p>   
+        <div class="spacer"></div> 
+        <img id="camera-image" src="camera.png" alt="Camera Icon">
+        <p id="win-message-text"></p> 
         <div id="leaderboard-section">
             <h3>MEJORES PUNTUACIONES</h3>
             <ul id="leaderboard-list">
@@ -559,39 +577,43 @@
 
 
         // Obtener referencias a los elementos del DOM
-        let gameContainer;
-        let player;
-        let scoreDisplay;
-        let coinsDisplay;
-        let gameOverMessage;
-        let finalScoreDisplay;
-        let restartButton;
-        let startScreen;
-        let startButton;
-        let gameOverText;
-        let playerNameInput;
-        let playerDNIInput;
-        let validationMessage;
-        let nameAsterisk;
-        let dniAsterisk;
-        let cameraImage;
-        let winMessageText;
-        let backgroundMusic;
-        let spawnSound;
-        let coinSound;
-        let loseSound;
-        let leaderboardSection;
-        let leaderboardList;
-        let mobileControls;
-        let leftButton;
-        let upButton;
-        let rightButton;
+        const gameContainer = document.getElementById('game-container');
+        const player = document.getElementById('player');
+        const scoreDisplay = document.getElementById('score');
+        const coinsDisplay = document.getElementById('coins');
+        const gameOverMessage = document.getElementById('game-over-message');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const restartButton = document.getElementById('restart-button');
+        const startScreen = document.getElementById('start-screen');
+        const startButton = document.getElementById('start-button');
+        const gameOverText = document.getElementById('game-over-text'); // Nuevo elemento para el texto de game over
+        const playerNameInput = document.getElementById('playerName'); // Campo de nombre
+        const playerDNIInput = document.getElementById('playerDNI');   // Campo de DNI
+        const playerInfoNameDisplay = document.getElementById('player-info-name'); // Div para mostrar nombre del jugador
+        const playerInfoDNIDisplay = document.getElementById('player-info-dni');   // Div para mostrar DNI del jugador
+        const validationMessage = document.getElementById('validation-message'); // Mensaje de validación
+        const nameAsterisk = document.getElementById('nameAsterisk'); // Asterisco de nombre
+        const dniAsterisk = document.getElementById('dniAsterisk');     // Asterisco de DNI
+        const cameraImage = document.getElementById('camera-image'); // Imagen de la cámara
+        const winMessageText = document.getElementById('win-message-text'); // Texto de "Toma una captura..."
+        const backgroundMusic = document.getElementById('background-music'); // Elemento de audio
+        const spawnSound = document.getElementById('spawn-sound'); // Sonido de spawn
+        const coinSound = document.getElementById('coin-sound');   // Sonido de coin
+        const loseSound = document.getElementById('lose-sound');   // Sonido de lose
+
+        // Referencias a los elementos del leaderboard
+        const leaderboardSection = document.getElementById('leaderboard-section');
+        const leaderboardList = document.getElementById('leaderboard-list');
+
+        // Controles móviles
+        const leftButton = document.getElementById('left-button');
+        const upButton = document.getElementById('up-button');
+        const rightButton = document.getElementById('right-button');
+        const mobileControls = document.getElementById('mobile-controls'); // Referencia a los controles móviles
 
         // --- INICIO: Configuración de Google Sheets / Apps Script ---
-        // ¡TU URL DE APPS SCRIPT AQUÍ!
-        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxUVG_I0HyMxd-c2Wr9BKVsOqjBVT8FdsjFaccUJp2GDcv6kMah4l30-gbLgO4Xi9aM/exec'; 
-        // ¡TU ID DE GOOGLE SHEET AQUÍ!
-        const SPREADSHEET_ID = '1VAU3X8HdUMwcH2T9-3bitYXvfBQ7oB6-oAxSlxV2ISA'; 
+        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxUVG_I0HyMxd-c2Wr9BKVsOqjBVT8FdsjFaccUJ2GDcv6kMah4l30-gbLgO4Xi9aM/exec'; // ¡TU URL DE APPS SCRIPT AQUÍ!
+        const SPREADSHEET_ID = '1VAU3X8HdUMwcH2T9-3bitYXvfBQ7oB6-oAxSlxV2ISA'; // ¡TU ID DE GOOGLE SHEET AQUÍ!
         // --- FIN: Configuración de Google Sheets / Apps Script ---
 
         /**
@@ -627,7 +649,7 @@
          */
         async function fetchLeaderboard() {
             if (!leaderboardList) {
-                console.error("Leaderboard list element not found (fetchLeaderboard).");
+                console.error("Leaderboard list element not found.");
                 return;
             }
             leaderboardList.innerHTML = '<li>Cargando...</li>'; // Mostrar mensaje de carga
@@ -658,14 +680,13 @@
                 scores.forEach((scoreEntry, index) => {
                     const listItemName = document.createElement('li');
                     listItemName.classList.add('leaderboard-name');
-                    // 'Nombre' y 'Puntaje' son los nombres de las propiedades esperadas del JSON de Apps Script
-                    listItemName.textContent = `${index + 1}. ${scoreEntry.Nombre || 'Anónimo'}`; 
-                    leaderboardList.appendChild(listItemName); 
+                    listItemName.textContent = `${index + 1}. ${scoreEntry.Nombre || 'Anónimo'}`; // Usar scoreEntry.Nombre
+                    leaderboardList.appendChild(listItemName); // Añadir a la lista
 
                     const listItemScore = document.createElement('li');
                     listItemScore.classList.add('leaderboard-score');
-                    listItemScore.textContent = scoreEntry.Puntaje || 0; 
-                    leaderboardList.appendChild(listItemScore); 
+                    listItemScore.textContent = scoreEntry.Puntaje || 0; // Usar scoreEntry.Puntaje
+                    leaderboardList.appendChild(listItemScore); // Añadir a la lista
                 });
             } else {
                 leaderboardList.innerHTML = '<li>No hay puntuaciones aún.</li>';
@@ -682,67 +703,51 @@
             // y que los elementos de UI externos ajusten su ancho para coincidir con el contenedor del juego.
 
             // Player
-            if (player) {
-                player.style.width = (TILE_SIZE * 0.9) + 'px'; // 90% del tile size
-                player.style.height = (TILE_SIZE * 0.9) + 'px';
-            }
+            player.style.width = (TILE_SIZE * 0.9) + 'px'; // 90% del tile size
+            player.style.height = (TILE_SIZE * 0.9) + 'px';
 
             // Lanes
             document.querySelectorAll('.lane').forEach(laneElement => {
-                if (laneElement) laneElement.style.height = TILE_SIZE + 'px';
+                laneElement.style.height = TILE_SIZE + 'px';
             });
 
             // Obstacles
             document.querySelectorAll('.obstacle').forEach(obsElement => {
-                if (obsElement) {
-                    obsElement.style.width = (obsElement.dataset.originalWidth * TILE_SIZE - (TILE_SIZE * 0.1)) + 'px';
-                    obsElement.style.height = (TILE_SIZE * 0.9) + 'px';
-                }
+                obsElement.style.width = (obsElement.dataset.originalWidth * TILE_SIZE - (TILE_SIZE * 0.1)) + 'px';
+                obsElement.style.height = (TILE_SIZE * 0.9) + 'px';
             });
 
             // Coins
             document.querySelectorAll('.coin').forEach(coinElement => {
-                if (coinElement) {
-                    coinElement.style.width = (TILE_SIZE * 0.5) + 'px'; // 50% del tile size
-                    coinElement.style.height = (TILE_SIZE * 0.5) + 'px';
-                    // Reajustar la posición de la moneda para centrarla en el tile
-                    coinElement.style.left = (parseFloat(coinElement.dataset.xTile) * TILE_SIZE + (TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px';
-                    coinElement.style.top = ((TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px';
-                }
+                coinElement.style.width = (TILE_SIZE * 0.5) + 'px'; // 50% del tile size
+                coinElement.style.height = (TILE_SIZE * 0.5) + 'px';
+                // Reajustar la posición de la moneda para centrarla en el tile
+                coinElement.style.left = (parseFloat(coinElement.dataset.xTile) * TILE_SIZE + (TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px';
+                coinElement.style.top = ((TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px';
             });
             
             // Re-posicionar el jugador con el nuevo TILE_SIZE (aunque TILE_SIZE es fijo, esto es buena práctica)
             updatePlayerPosition();
 
             // Ajustar el ancho de los elementos externos para que coincidan con el ancho del game-container (400px)
-            const scoreBoardElement = document.getElementById('score-board');
-            const mobileControlsElement = document.getElementById('mobile-controls');
+            const scoreBoard = document.getElementById('score-board');
+            const mobileControls = document.getElementById('mobile-controls');
 
-            if (gameContainer && scoreBoardElement) {
-                scoreBoardElement.style.width = gameContainer.offsetWidth + 'px'; // Usar el offsetWidth del gameContainer
-            }
-            if (gameContainer && mobileControlsElement) {
-                mobileControlsElement.style.width = gameContainer.offsetWidth + 'px'; // Usar el offsetWidth del gameContainer
-            }
+            // Ajusta el ancho de los elementos externos para que coincidan con el ancho escalado del game-container
+            scoreBoard.style.width = gameContainer.offsetWidth + 'px'; // Usar el offsetWidth del gameContainer
+            mobileControls.style.width = gameContainer.offsetWidth + 'px'; // Usar el offsetWidth del gameContainer
 
             // Ajusta el tamaño de la fuente en el score-board y mobile-controls proporcionalmente
-            if (scoreBoardElement) {
-                scoreBoardElement.style.fontSize = (TILE_SIZE * 0.6) + 'px'; // Ajusta el tamaño de la fuente
-                let scoreTextElement = scoreBoardElement.querySelector('.score-text');
-                if (scoreTextElement) scoreTextElement.style.fontSize = (TILE_SIZE * 0.6) + 'px'; 
-                let scoreNumberElement = scoreBoardElement.querySelector('.score-number');
-                if (scoreNumberElement) scoreNumberElement.style.fontSize = (TILE_SIZE * 0.6) + 'px';
-                let scoreBoardImg = scoreBoardElement.querySelector('img');
-                if (scoreBoardImg) scoreBoardImg.style.height = (TILE_SIZE * 1.25) + 'px'; // Escala el logo
-            }
+            scoreBoard.style.fontSize = (TILE_SIZE * 0.6) + 'px'; // Ajusta el tamaño de la fuente
+            scoreBoard.querySelector('.score-text').style.fontSize = (TILE_SIZE * 0.6) + 'px'; 
+            scoreBoard.querySelector('.score-number').style.fontSize = (TILE_SIZE * 0.6) + 'px';
+            scoreBoard.querySelector('img').style.height = (TILE_SIZE * 1.25) + 'px'; // Escala el logo
 
-            if (mobileControlsElement) {
-                mobileControlsElement.querySelectorAll('.control-button').forEach(button => {
-                    button.style.fontSize = (TILE_SIZE * 0.5) + 'px';
-                    button.style.padding = (TILE_SIZE * 0.2) + 'px ' + (TILE_SIZE * 0.6) + 'px';
-                    button.style.borderRadius = (TILE_SIZE * 0.25) + 'px';
-                });
-            }
+            mobileControls.querySelectorAll('.control-button').forEach(button => {
+                button.style.fontSize = (TILE_SIZE * 0.5) + 'px';
+                button.style.padding = (TILE_SIZE * 0.2) + 'px ' + (TILE_SIZE * 0.6) + 'px';
+                button.style.borderRadius = (TILE_SIZE * 0.25) + 'px';
+            });
         }
 
 
@@ -1124,21 +1129,17 @@
             cancelAnimationFrame(gameLoopId); // Detener el bucle del juego
             
             const finalScore = score + (2 * coins);
-            if (finalScoreDisplay) finalScoreDisplay.textContent = finalScore;
+            finalScoreDisplay.textContent = finalScore;
 
-            // Ocultar elementos específicos ya que no hay condición de ganar/perder específica
-            if (playerInfoNameDisplay) playerInfoNameDisplay.style.display = 'none';
-            if (playerInfoDNIDisplay) playerInfoDNIDisplay.style.display = 'none';
-            if (cameraImage) cameraImage.style.display = 'none';
-            if (winMessageText) winMessageText.style.display = 'none';
-
-            // Siempre mostrar "GAME OVER"
-            if (gameOverText) gameOverText.textContent = "GAME OVER"; 
+            // Mostrar información del jugador
+            // Asegúrate de que playerInfoNameDisplay y playerInfoDNIDisplay no sean null
+            if (playerInfoNameDisplay) playerInfoNameDisplay.textContent = currentPlayerName;
+            if (playerInfoDNIDisplay) playerInfoDNIDisplay.textContent = currentPlayerDNI;
 
             // Ocultar controles móviles
-            if (mobileControls) mobileControls.style.display = 'none';
+            mobileControls.style.display = 'none';
             // Deshabilitar interacción con el juego
-            if (gameContainer) gameContainer.style.pointerEvents = 'none';
+            gameContainer.style.pointerEvents = 'none';
 
             // Reproducir sonido de fin de juego
             if (loseSound) {
@@ -1146,7 +1147,19 @@
                 loseSound.play().catch(error => console.error("Error al reproducir sonido de fin de juego:", error));
             }
 
-            if (gameOverMessage) gameOverMessage.style.display = 'flex'; // Mostrar el mensaje de fin de juego
+            // Cambiar la condición de victoria a 150 puntos
+            if (finalScore >= 150) { 
+                if (gameOverText) gameOverText.textContent = "¡GANASTE!";
+                if (winMessageText) winMessageText.textContent = "Toma una captura a esta pantalla o déjala abierta y acércate a nuestro stand.";
+                if (winMessageText) winMessageText.style.display = 'block'; // Mostrar texto de "Toma una captura..."
+                if (cameraImage) cameraImage.style.display = 'block'; // Mostrar imagen de cámara si ganó
+            } else {
+                if (gameOverText) gameOverText.textContent = "GAME OVER"; // Siempre "GAME OVER" si no gana
+                if (winMessageText) winMessageText.style.display = 'none'; // Ocultar texto de "Toma una captura..."
+                if (cameraImage) cameraImage.style.display = 'none'; // Ocultar imagen de cámara si perdió
+            }
+
+            gameOverMessage.style.display = 'flex'; // Mostrar el mensaje de fin de juego (now with display: flex)
             
             // Enviar puntuación antes de obtener el leaderboard
             await sendScoreToGoogleSheets(currentPlayerName, currentPlayerDNI, finalScore);
@@ -1165,7 +1178,7 @@
          */
         function updatePlayerBlinking() {
             if (gameOver || !gameStarted) {
-                if (player) player.style.backgroundImage = `url('${playerEyesOpenURL}')`; // Asegurar ojos abiertos si el juego no está activo
+                player.style.backgroundImage = `url('${playerEyesOpenURL}')`; // Asegurar ojos abiertos si el juego no está activo
                 return;
             }
 
@@ -1174,7 +1187,7 @@
                 if (blinkTimer <= 0) {
                     isPlayerBlinking = true;
                     blinkTimer = BLINK_DURATION; // Duración de los ojos cerrados
-                    if (player) player.style.backgroundImage = `url('${playerEyesClosedURL}')`;
+                    player.style.backgroundImage = `url('${playerEyesClosedURL}')`;
                 }
             } else {
                 blinkTimer--;
@@ -1182,7 +1195,7 @@
                     isPlayerBlinking = false;
                     // Intervalo aleatorio para el próximo parpadeo
                     blinkTimer = Math.floor(Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN + 1)) + BLINK_INTERVAL_MIN;
-                    if (player) player.style.backgroundImage = `url('${playerEyesOpenURL}')`;
+                    player.style.backgroundImage = `url('${playerEyesOpenURL}')`;
                 }
             }
         }
@@ -1211,11 +1224,11 @@
                 if (nameAsterisk) nameAsterisk.style.display = 'none';
                 if (dniAsterisk) dniAsterisk.style.display = 'none';
 
-                if (playerNameInput && !playerNameInput.value.trim()) {
+                if (!playerNameInput.value.trim()) {
                     if (nameAsterisk) nameAsterisk.style.display = 'inline';
                     isValid = false;
                 }
-                if (playerDNIInput && !playerDNIInput.value.trim()) {
+                if (!playerDNIInput.value.trim()) {
                     if (dniAsterisk) dniAsterisk.style.display = 'inline';
                     isValid = false;
                 }
@@ -1225,8 +1238,8 @@
                     console.error('Validación fallida: Campos requeridos no rellenados.'); // Log de error para depuración
                     return; // No iniciar el juego si los campos están vacíos
                 }
-                if (playerNameInput) currentPlayerName = playerNameInput.value.trim();
-                if (playerDNIInput) currentPlayerDNI = playerDNIInput.value.trim();
+                currentPlayerName = playerNameInput.value.trim();
+                currentPlayerDNI = playerDNIInput.value.trim();
             }
 
 
@@ -1236,9 +1249,9 @@
             currentMaxY = playerPos.y; // Reiniciar la fila más lejana alcanzada
             gameOver = false; // El juego no ha terminado
             
-            if (scoreDisplay) scoreDisplay.textContent = score; // Actualizar marcador
-            if (coinsDisplay) coinsDisplay.textContent = coins; // Actualizar monedas
-            if (gameOverMessage) gameOverMessage.style.display = 'none'; // Ocultar mensaje de fin de juego
+            scoreDisplay.textContent = score; // Actualizar marcador
+            coinsDisplay.textContent = coins; // Actualizar monedas
+            gameOverMessage.style.display = 'none'; // Ocultar mensaje de fin de juego
             
             initLanes(); // Regenerar todas las filas
             updatePlayerPosition(); // Restablecer la posición visual del jugador
@@ -1246,15 +1259,15 @@
             // Reset scroll
             const scrollOffset = 0;
             lanes.forEach(lane => {
-                if (lane.element) lane.element.style.transform = `translateY(${scrollOffset}px)`;
+                lane.element.style.transform = `translateY(${scrollOffset}px)`;
             });
             // player.style.transform se actualiza en updatePlayerPosition()
 
             gameStarted = true; // El juego ha comenzado
             gameLoop(); // Iniciar el bucle del juego
-            if (mobileControls) mobileControls.style.display = 'flex'; // Mostrar controles móviles al iniciar el juego
-            if (gameContainer) gameContainer.style.pointerEvents = 'auto'; // Habilitar interacción con el juego
-            if (startScreen) startScreen.style.display = 'none'; // Ocultar la pantalla de inicio
+            mobileControls.style.display = 'flex'; // Mostrar controles móviles al iniciar el juego
+            gameContainer.style.pointerEvents = 'auto'; // Habilitar interacción con el juego
+            startScreen.style.display = 'none'; // Ocultar la pantalla de inicio
 
             // Reproducir música al iniciar el juego
             if (backgroundMusic) {
@@ -1298,44 +1311,48 @@
         let touchStartY = 0;
         const SWIPE_THRESHOLD = 30; // Mínima distancia para considerar un deslizamiento
 
-        // Estos listeners se adjuntan en DOMContentLoaded
-        // Por lo tanto, las referencias a gameContainer, etc. deben ser variables declaradas arriba (let)
-        // y asignadas dentro de DOMContentLoaded para evitar "Cannot read properties of undefined"
-        // ya que al inicio del script son undefined
-        // gameContainer.addEventListener('touchstart', (e) => { ... }); // MOVIDO A DOMContentLoaded
+        // Ahora los listeners de touch están en gameContainer, que es el área de juego
+        gameContainer.addEventListener('touchstart', (e) => {
+            // Prevenir el desplazamiento de la página al tocar el contenedor del juego
+            e.preventDefault(); 
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: false }); // Usar { passive: false } para permitir preventDefault
+
+        gameContainer.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevenir el desplazamiento de la página durante el deslizamiento
+        }, { passive: false });
+
+        gameContainer.addEventListener('touchend', (e) => {
+            if (gameOver || !gameStarted) return;
+
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+
+            const dx = touchEndX - touchStartX;
+            const dy = touchEndY - touchStartY;
+
+            // Determinar si es un deslizamiento horizontal o vertical
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
+                // Deslizamiento horizontal
+                if (dx > 0) {
+                    movePlayer(1, 0); // Deslizar a la derecha
+                } else {
+                    movePlayer(-1, 0); // Deslizar a la izquierda
+                }
+            } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > SWIPE_THRESHOLD) { 
+                // Deslizamiento vertical
+                if (dy < 0) { // Deslizar hacia arriba (Y disminuye)
+                    movePlayer(0, 1); // Mover hacia adelante
+                }
+                // No hay movimiento hacia abajo en este juego
+            }
+        });
+        // --- Fin Lógica de Control Táctil ---
 
         // Envuelve los listeners en DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOMContentLoaded fired.'); // Log para depuración
-            // Asignar referencias a los elementos del DOM DENTRO de DOMContentLoaded
-            gameContainer = document.getElementById('game-container');
-            player = document.getElementById('player');
-            scoreDisplay = document.getElementById('score');
-            coinsDisplay = document.getElementById('coins');
-            gameOverMessage = document.getElementById('game-over-message');
-            finalScoreDisplay = document.getElementById('final-score');
-            restartButton = document.getElementById('restart-button');
-            startScreen = document.getElementById('start-screen');
-            startButton = document.getElementById('start-button');
-            gameOverText = document.getElementById('game-over-text');
-            playerNameInput = document.getElementById('playerName');
-            playerDNIInput = document.getElementById('playerDNI');
-            validationMessage = document.getElementById('validation-message');
-            nameAsterisk = document.getElementById('nameAsterisk');
-            dniAsterisk = document.getElementById('dniAsterisk');
-            cameraImage = document.getElementById('camera-image');
-            winMessageText = document.getElementById('win-message-text');
-            backgroundMusic = document.getElementById('background-music');
-            spawnSound = document.getElementById('spawn-sound');
-            coinSound = document.getElementById('coin-sound');
-            loseSound = document.getElementById('lose-sound');
-            leaderboardSection = document.getElementById('leaderboard-section');
-            leaderboardList = document.getElementById('leaderboard-list');
-            mobileControls = document.getElementById('mobile-controls');
-            leftButton = document.getElementById('left-button');
-            upButton = document.getElementById('up-button');
-            rightButton = document.getElementById('right-button');
-            
             // Precargar la imagen de parpadeo para evitar el efecto de "desaparición"
             const preloadBlinkImage = new Image();
             preloadBlinkImage.src = playerEyesClosedURL;
@@ -1351,70 +1368,21 @@
             startButton.addEventListener('click', resetGame); 
 
             // Event listeners para los nuevos botones de control móvil
-            // Estos listeners MOVIDOS DENTRO de DOMContentLoaded
-            if (gameContainer) { // Verificar que gameContainer no sea null antes de adjuntar listeners de touch
-                gameContainer.addEventListener('touchstart', (e) => {
-                    // Prevenir el desplazamiento de la página al tocar el contenedor del juego
-                    e.preventDefault(); 
-                    touchStartX = e.touches[0].clientX;
-                    touchStartY = e.touches[0].clientY;
-                }, { passive: false }); // Usar { passive: false } para permitir preventDefault
-
-                gameContainer.addEventListener('touchmove', (e) => {
-                    e.preventDefault(); // Prevenir el desplazamiento de la página durante el deslizamiento
-                }, { passive: false });
-
-                gameContainer.addEventListener('touchend', (e) => {
-                    if (gameOver || !gameStarted) return;
-
-                    const touchEndX = e.changedTouches[0].clientX;
-                    const touchEndY = e.changedTouches[0].clientY;
-
-                    const dx = touchEndX - touchStartX;
-                    const dy = touchEndY - touchStartY;
-
-                    // Determinar si es un deslizamiento horizontal o vertical
-                    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
-                        // Deslizamiento horizontal
-                        if (dx > 0) {
-                            movePlayer(1, 0); // Deslizar a la derecha
-                        } else {
-                            movePlayer(-1, 0); // Deslizar a la izquierda
-                        }
-                    } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > SWIPE_THRESHOLD) { 
-                        // Deslizamiento vertical
-                        if (dy < 0) { // Deslizar hacia arriba (Y disminuye)
-                            movePlayer(0, 1); // Mover hacia adelante
-                        }
-                        // No hay movimiento hacia abajo en este juego
-                    }
-                });
-            }
-            // --- Fin Lógica de Control Táctil ---
-
-
-            // Event listeners para los nuevos botones de control móvil
-            if (leftButton) {
-                leftButton.addEventListener('click', () => {
-                    if (gameStarted && !gameOver) {
-                        movePlayer(-1, 0);
-                    }
-                });
-            }
-            if (upButton) {
-                upButton.addEventListener('click', () => {
-                    if (gameStarted && !gameOver) {
-                        movePlayer(0, 1);
-                    }
-                });
-            }
-            if (rightButton) {
-                rightButton.addEventListener('click', () => {
-                    if (gameStarted && !gameOver) {
-                        movePlayer(1, 0);
-                    }
-                });
-            }
+            leftButton.addEventListener('click', () => {
+                if (gameStarted && !gameOver) {
+                    movePlayer(-1, 0);
+                }
+            });
+            upButton.addEventListener('click', () => {
+                if (gameStarted && !gameOver) {
+                    movePlayer(0, 1);
+                }
+            });
+            rightButton.addEventListener('click', () => {
+                if (gameStarted && !gameOver) {
+                    movePlayer(1, 0);
+                }
+            });
 
             // Control de movimiento del jugador con las teclas de flecha (para PC)
             document.addEventListener('keydown', (e) => {
