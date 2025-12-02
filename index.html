@@ -8,7 +8,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- CONFIGURACIÓN TAILWIND: Registramos la fuente Jersey 10 -->
+    <!-- CONFIGURACIÓN TAILWIND -->
     <script>
       function configureTailwind() {
         if (window.tailwind) {
@@ -19,10 +19,10 @@
                   pixel: ['"Jersey 10"', 'sans-serif'],
                 },
                 colors: {
-                    brandRed: '#d2362a', // NUEVO ROJO
-                    brandYellow: '#facc15', // AMARILLO
-                    brandBlue: '#0369a1', // AZUL DE LA MARCA
-                    brandBlueLight: '#38bdf8', // AZUL CLARO
+                    brandRed: '#d2362a', 
+                    brandYellow: '#facc15',
+                    brandBlue: '#0369a1',
+                    brandBlueLight: '#38bdf8',
                 }
               },
             },
@@ -37,17 +37,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
     
-    <!-- Babel for JSX -->
+    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-      /* GLOBAL STYLES & RESET */
+      /* GLOBAL STYLES */
       html, body {
         margin: 0;
         padding: 0;
-        background-color: #020617; /* Slate 950 */
+        background-color: #020617; 
         font-family: 'Jersey 10', sans-serif !important; 
-        touch-action: none; /* Prevent scroll/zoom on mobile */
+        touch-action: none; 
         overflow: hidden; 
         width: 100%;
         height: 100%;
@@ -69,7 +69,6 @@
         display: block;
       }
       
-      /* Retro Scanline Effect */
       .scanline {
         background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
         background-size: 100% 4px;
@@ -83,7 +82,6 @@
         text-shadow: 2px 2px 0px #000;
       }
 
-      /* Button interactions override for pixel boxes */
       .btn-pixel-wrapper:active .pixel-inner {
         transform: translateY(4px);
       }
@@ -91,7 +89,6 @@
         transform: none; 
       }
 
-      /* Heartbeat Animation for Logo */
       @keyframes heartbeat {
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.1); }
@@ -101,7 +98,6 @@
         animation: heartbeat 2s infinite ease-in-out;
       }
 
-      /* --- PIXEL ART CORNERS (Escalonado) --- */
       .pixel-clip {
         clip-path: polygon(
           0px 4px, 4px 4px, 4px 0px,
@@ -112,7 +108,6 @@
       }
     </style>
     
-    <!-- ROBUST IMPORT MAP: STRICTLY REACT 18 -->
     <script type="importmap">
 {
   "imports": {
@@ -131,44 +126,27 @@
         import { createRoot } from 'react-dom/client';
         import { Trash2, Award, Play, RotateCcw, ChevronLeft, ChevronRight, ArrowUp, Skull, Lock, Gamepad2, Move } from 'lucide-react';
 
-        // ==========================================
-        // 1. ASSETS & CONSTANTS
-        // ==========================================
-        
         const GAME_ASSETS = {
             LOGO: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/logo1.png",
             IMAGINED_BY: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/imaginedbyBG.png",
             SPLASH_BG: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/playa1.png", 
-            
-            // CHARACTERS
+            FRAME_RESULT: "https://raw.githubusercontent.com/nsanchezBG/BrandGeeksBB/main/marco1.png", 
             PLAYER_MATEO: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/MateoPlayer.gif",
             PLAYER_ANA: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/ana1.gif",
-            
-            // POWER UPS
             POWER_CAN: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/lata1.png",
             POWER_BUBBLE: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/bubble1.png",
-
-            // AUDIO
             MUSIC_BG: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/408efe5d77d229042ea878ad5cdd219df39c73ce/Untitled.mp3",
             SFX_COLLECT: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/ec7e957306cc84aaca09b7ae617afd65bf33f921/obj.wav",
             SFX_EXPLOSION: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/ec7e957306cc84aaca09b7ae617afd65bf33f921/explosion.wav",
             SFX_POWERUP: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/4d481af71e4a117e675f085b04748bb23394c7f1/powerup1.wav",
             SFX_POWER_DESTROY: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/4d481af71e4a117e675f085b04748bb23394c7f1/powerupdestroy1.wav",
-
-            // BASURA
             TRASH_BOTTLE: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/botella.png",
             TRASH_BAG: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/bolsa.png",
             TRASH_TIRE: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/llanta.png",
             TRASH_BOOT: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/bota.png",
-
-            // ENEMIGOS
             ENEMY_JELLYFISH: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/medusa.png",
             ENEMY_SHARK: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/tiburon.png",
-            
-            // FONDO
             BG_LAYER: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/fondo1.png",
-
-            // DECORACIÓN
             DECO_ALGA_1: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/alga1.png",
             DECO_ALGA_2: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/alga2.png",
             DECO_ALGA_3: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/alga3.png",
@@ -225,19 +203,14 @@ const CUSTOM_MESSAGES = [
         const SWIM_FORCE = -7; 
         const FRICTION = 0.96;
         
-        // Colors updated per user request
         const COLORS = {
-            BRAND_RED: '#d2362a', // UPDATED
-            BRAND_YELLOW: '#facc15', // KEEPING CONTRAST
+            BRAND_RED: '#d2362a', 
+            BRAND_YELLOW: '#facc15', 
             BRAND_BLUE_LIGHT: '#38bdf8',
             BRAND_BLUE_DARK: '#0369a1',
             SAND: '#fcd34d',
             BUBBLE: 'rgba(255, 255, 255, 0.6)'
         };
-
-        // ==========================================
-        // 2. COMPONENT: GAME CANVAS
-        // ==========================================
 
         const GameCanvas = ({ status, onScoreUpdate, onGameOver, playSfx, sessionId, playerSrc, joystickRef }) => {
             const canvasRef = useRef(null);
@@ -289,7 +262,6 @@ const CUSTOM_MESSAGES = [
                 };
             }, []);
             
-            // --- Reset Logic ---
             useEffect(() => {
                  gameState.current = {
                     player: { x: 50, y: LOGICAL_HEIGHT/2, vx: 0, vy: 0, width: 80, height: 80, invincible: 0, bubbleTimer: 0 },
@@ -313,7 +285,6 @@ const CUSTOM_MESSAGES = [
                 const keys = keysRef.current;
                 frameCountRef.current++;
                 
-                // Allow drawing background in SPLASH and START
                 if (status === 'START' || status === 'SPLASH') return;
 
                 const fc = frameCountRef.current;
@@ -351,11 +322,9 @@ const CUSTOM_MESSAGES = [
 
                 if (joystickRef && joystickRef.current && joystickRef.current.active) {
                     const j = joystickRef.current;
-                    // Horizontal
                     if (j.x > 0.2) dx = 0.25; 
                     else if (j.x < -0.2) dx = -0.25;
                     
-                    // Vertical
                     if (j.y < -0.3) { 
                         player.vy -= 0.45; 
                         if (fc % 5 === 0) state.particles.push({ x: player.x + (facingRef.current === 'RIGHT' ? 0 : player.width), y: player.y + 40, vx: (Math.random()-0.5)*2, vy: 1, life: 20, color: 'rgba(255,255,255,0.5)', w:6, h:6 });
@@ -407,12 +376,11 @@ const CUSTOM_MESSAGES = [
                                 e.delete = true; playSfx('POWER_DESTROY'); 
                                 for(let i=0; i<10; i++) state.particles.push({x: e.x + e.w/2, y: e.y + e.h/2, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 30, color: '#60a5fa', w: 6, h:6});
                             } else if (player.invincible === 0) { 
-                                // COLLISION LOGIC FIX: Stop immediately
                                 playSfx('EXPLOSION'); 
-                                player.vx = 0; // Stop horizontal movement
-                                player.vy = 0; // Stop vertical movement
+                                player.vx = 0; 
+                                player.vy = 0; 
                                 onGameOver(state.score); 
-                                return; // Stop processing this loop
+                                return; 
                             }
                         }
                     }
@@ -746,7 +714,7 @@ const CUSTOM_MESSAGES = [
                                         <div className="pointer-events-auto" onClick={(e) => e.stopPropagation()}>
                                             <div className="btn-pixel-wrapper w-20 h-20 md:w-24 md:h-24 active:translate-y-1 transition-transform touch-manipulation">
                                                 <div className="w-full h-full bg-[#7f1d1d] p-1 pixel-clip shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]" onTouchStart={(e) => { e.preventDefault(); emitInput(' ', 'down'); }} onTouchEnd={(e) => { e.preventDefault(); emitInput(' ', 'up'); }} onMouseDown={() => emitInput(' ', 'down')} onMouseUp={() => emitInput(' ', 'up')} onMouseLeave={() => emitInput(' ', 'up')}>
-                                                    <div className="pixel-inner w-full h-full bg-brandRed pixel-clip flex flex-col items-center justify-center transition-transform"><ArrowUp className="w-10 h-10 text-white mb-1" strokeWidth={4} /><span className="text-[10px] font-bold text-brandYellow text-shadow-retro">NADAR</span></div>
+                                                    <div className="pixel-inner w-full h-full bg-brandRed pixel-clip flex flex-col items-center justify-center transition-transform leading-none"><ArrowUp className="w-10 h-10 text-white mb-0" strokeWidth={4} /><span className="text-xl font-bold text-white text-shadow-retro leading-none tracking-widest">NADAR</span></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -854,15 +822,30 @@ const CUSTOM_MESSAGES = [
                                     <div className="w-full max-w-xs animate-in slide-in-from-bottom duration-500" onClick={(e) => e.stopPropagation()}>
                                         <div className="bg-brandBlue p-1 pixel-clip shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]">
                                             <div className="bg-white p-1 pixel-clip">
-                                                <div className="bg-[#f0f9ff] p-6 text-center flex flex-col items-center pixel-clip">
-                                                    <img src={GAME_ASSETS.LOGO} alt="Marinero" className="h-16 object-contain mb-4 animate-bounce" />
-                                                    <h2 className="text-4xl text-brandBlue font-bold mb-4 text-shadow-retro">¡OH NO!</h2>
-                                                    <div className="w-full bg-brandRed p-1 pixel-clip mb-6 shadow-sm transform -rotate-1">
-                                                        <div className="bg-white p-4 pixel-clip"><div className="text-xl text-slate-500 font-bold uppercase mb-1">Puntuación Final</div><div className="text-6xl font-black text-brandRed text-shadow-retro">{score}</div></div>
+                                                <div className="bg-[#f0f9ff] p-2 text-center flex flex-col items-center pixel-clip relative">
+                                                    <img src={GAME_ASSETS.LOGO} alt="Marinero" className="h-12 object-contain mb-1 animate-bounce" />
+                                                    
+                                                    {/* SECCIÓN DE PUNTUACIÓN */}
+                                                    <div className="mb-2 text-center">
+                                                        <div className="text-xl text-slate-500 font-bold uppercase leading-none mb-[-10px]">Puntuación Final</div>
+                                                        <div className="text-8xl font-black text-brandYellow text-shadow-retro leading-[0.75]">{score}</div>
                                                     </div>
-                                                    {gameOverMsg && (<div className="mb-6"><div className="text-brandBlue font-bold text-2xl uppercase border-b-2 border-blue-200 pb-1 mb-2">{gameOverMsg.title}</div><p className="text-xl text-slate-600 italic leading-relaxed">"{gameOverMsg.message}"</p></div>)}
+
+                                                    {/* SECCIÓN DEL MARCO CON MENSAJE */}
+                                                    {gameOverMsg && (
+                                                        <div className="relative w-full mb-2">
+                                                            <img src={GAME_ASSETS.FRAME_RESULT} className="w-full h-auto object-contain pixel-clip" alt="Result Frame" />
+                                                            
+                                                            {/* Contenido dentro del Marco - Ajustado al 60% inferior + Padding */}
+                                                            <div className="absolute bottom-0 left-0 right-0 h-[60%] flex flex-col items-center justify-center px-6 pb-4 text-center leading-none">
+                                                                <div className="text-brandBlue font-bold text-3xl uppercase mb-0 leading-none">{gameOverMsg.title}</div>
+                                                                <p className="text-2xl text-slate-600 italic leading-none">"{gameOverMsg.message}"</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
                                                     <button onClick={restartGame} className="btn-pixel-wrapper w-full group active:translate-y-1 transition-transform">
-                                                        <div className="bg-white p-1 pixel-clip shadow-[4px_4px_0px_0px_#7f1d1d]"><div className="pixel-inner bg-brandRed py-4 text-white font-bold text-lg pixel-clip flex items-center justify-center gap-2 group-hover:bg-red-600"><RotateCcw className="w-5 h-5" />REINTENTAR</div></div>
+                                                        <div className="bg-white p-1 pixel-clip shadow-[4px_4px_0px_0px_#7f1d1d]"><div className="pixel-inner bg-brandRed py-4 text-white font-bold text-2xl pixel-clip flex items-center justify-center gap-3 group-hover:bg-red-600"><RotateCcw className="w-8 h-8" />REINTENTAR</div></div>
                                                     </button>
                                                 </div>
                                             </div>
