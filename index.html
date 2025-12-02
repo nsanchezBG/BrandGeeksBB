@@ -1,1417 +1,853 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burger Run</title>
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-K2W98TT7');</script>
-    <!-- End Google Tag Manager -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Salvando el Mar - Marinero</title>
     
-    <!-- Importar la fuente VT323 de Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-
-    <!-- PWA: Enlace al archivo manifest.json -->
-    <link rel="manifest" href="manifest.json">
-    <!-- PWA: Colores para la barra de estado del navegador en Android -->
-    <meta name="theme-color" content="#000000"> <!-- Cambiado a negro para mejor contraste con icono blanco -->
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- CONFIGURACIÓN TAILWIND: Registramos la fuente Jersey 10 -->
+    <script>
+      function configureTailwind() {
+        if (window.tailwind) {
+          window.tailwind.config = {
+            theme: {
+              extend: {
+                fontFamily: {
+                  pixel: ['"Jersey 10"', 'sans-serif'],
+                },
+                colors: {
+                    brandRed: '#d2362a', // NUEVO ROJO
+                    brandYellow: '#facc15', // AMARILLO
+                    brandBlue: '#0369a1', // AZUL DE LA MARCA
+                    brandBlueLight: '#38bdf8', // AZUL CLARO
+                }
+              },
+            },
+          };
+        }
+      }
+    </script>
+    <script src="https://cdn.tailwindcss.com" onload="configureTailwind()"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* Estilos generales del cuerpo */
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* Evita barras de desplazamiento */
-        }
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #ffffff; /* Fondo blanco */
-            font-family: 'VT323', monospace; /* Fuente principal del juego */
-        }
-        /* Nuevo contenedor para escalar todo el juego y la UI */
-        #main-game-wrapper {
-            /* Dimensiones base "ideales" para el escalado */
-            width: 400px; 
-            /* Altura total ideal: 600px (juego) + 15px (margen controles) + 36px (controles) + 15px (margen marcador) + 110px (marcador) = ~771px */
-            height: 771px; /* Altura calculada para contener todo */
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Centrar los elementos internos */
-            justify-content: flex-start; /* Alinear arriba para el contenido del juego */
+      /* GLOBAL STYLES & RESET */
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #020617; /* Slate 950 */
+        font-family: 'Jersey 10', sans-serif !important; 
+        touch-action: none; /* Prevent scroll/zoom on mobile */
+        overflow: hidden; 
+        width: 100%;
+        height: 100%;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      #root {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
 
-            /* Aplicar el escalado a todo el wrapper */
-            /* Se eliminan position, left, top, translate para centrado por flexbox del body */
-            margin: auto; 
-            transform: scale(min(1, calc(100vw / 400), calc(100vh / 771)));
-            transform-origin: center center; /* Asegurar que el escalado y traslación sean desde el centro */
-            box-sizing: border-box; /* Asegurar que el padding se incluya en el tamaño */
-        }
+      canvas {
+        image-rendering: pixelated; 
+        display: block;
+      }
+      
+      /* Retro Scanline Effect */
+      .scanline {
+        background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+        background-size: 100% 4px;
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        pointer-events: none;
+        z-index: 50;
+      }
 
-        /* Contenedor principal del juego (ahora con dimensiones fijas dentro del wrapper) */
-        #game-container {
-            width: 400px; /* 10 tiles de ancho */
-            height: 600px; /* 15 tiles de alto */
-            background-color: #ffffff; /* Color de fondo blanco para las filas */
-            position: relative;
-            overflow: hidden;
-            border: 2px solid #333;
-            /* box-shadow: 0 0 10px rgba(0,0,0,0.5); ELIMINADO: Sombra exterior del contenedor del juego */
-            /* Asegurar que el contenedor del juego prevenga acciones táctiles */
-            touch-action: none; 
-            /* Por defecto, no recibe eventos de puntero hasta que el juego inicia */
-            pointer-events: none; 
-        }
-        /* Estilo para cada carril (fila) */
-        .lane {
-            width: 100%;
-            height: 40px; /* TILE_SIZE - se ajustará por JS */
-            position: absolute;
-            left: 0;
-            display: flex;
-            align-items: center;
-            background-color: #ffffff; /* Todas las filas son blancas */
-        }
-        /* Estilo para el jugador */
-        #player {
-            width: 36px; /* Se ajustará por JS */
-            height: 36px; /* Se ajustará por JS */
-            position: absolute;
-            transition: left 0.1s linear, top 0.1s linear;
-            z-index: 10;
-            box-sizing: border-box;
-            /* PNG del jugador - RUTA RELATIVA. Se establecerá dinámicamente por JS */
-            background-image: url('player.png'); 
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        /* Estilo para los obstáculos */
-        .obstacle {
-            height: 36px; /* Se ajustará por JS */
-            position: absolute;
-            border: 2px solid #000000; /* Borde negro */
-            box-sizing: border-box;
-            background-color: #000000; /* Obstáculos negros */
-            z-index: 5; /* Asegura que los obstáculos se muestren sobre el carril */
-        }
-        /* Estilo para las monedas */
-        .coin {
-            width: 20px; /* Se ajustará por JS */
-            height: 20px; /* Se ajustará por JS */
-            position: absolute;
-            z-index: 5;
-            /* PNG de la moneda - RUTA RELATIVA */
-            background-image: url('hamburger_411275.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        /* Marcador de puntuación */
-        #score-board {
-            /* Anchura fija, se escalará con el wrapper */
-            width: 400px; /* Coincide con el ancho del game-container */
-            
-            margin-top: 10px; /* Margen superior y centrado automático */
-            font-size: 24px; /* Tamaño base para los números */
-            color: #000000; /* Texto negro para contraste */
-            font-family: 'VT323', monospace; /* Aplicar fuente */
-            display: flex; /* Usar flexbox para alinear elementos */
-            justify-content: center; /* Centrar los elementos del marcador */
-            align-items: center; /* Alinear verticalmente */
-            padding: 5px 0;
-            gap: 10px; /* Espaciado entre elementos */
-        }
-        #score-board .score-item {
-            display: flex;
-            flex-direction: column; /* Apilar texto y número */
-            align-items: center; /* Centrar horizontalmente */
-            text-align: center; /* Asegurar centrado del texto */
-            gap: 0px; /* Eliminar espacio entre texto y número */
-        }
-        #score-board .score-text {
-            font-size: 24px; /* TAMAÑO ACTUALIZADO: Igual que el número */
-            line-height: 1; /* Ajustar altura de línea para compactar */
-        }
-        #score-board .score-number {
-            font-size: 24px; /* Mantener tamaño para el número */
-            line-height: 1; /* Ajustar altura de línea para compactar */
-        }
-        #score-board img {
-            width: auto; /* Ancho automático para mantener proporción */
-            height: 50px; /* Altura del logo para ocupar 2 líneas de texto, ajustar si es necesario */
-            margin: 0 10px; /* Pequeño margen a los lados del logo */
-        }
-        /* Mensaje de fin de juego */
-        #game-over-message {
-            position: fixed; /* Posicionamiento fijo para cubrir toda la ventana */
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            display: flex; /* Usar flexbox para centrar contenido */
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            font-size: 20px;
-            z-index: 100;
-            display: none; /* Oculto por defecto */
-            pointer-events: auto; /* Asegura que reciba clics cuando está visible */
-            padding: 20px; /* Añadir padding para evitar que el texto toque los bordes */
-            box-sizing: border-box;
-        }
-        #game-over-message h2 { /* Título GAME OVER */
-            font-size: 48px; /* Tamaño grande para GAME OVER */
-            margin-top: 0;
-            margin-bottom: 20px;
-            text-shadow: 3px 3px #000;
-        }
-        #game-over-message p {
-            font-size: 32px; /* Texto más grande */
-            margin: 0; /* Eliminar márgenes por defecto de p */
-            text-shadow: 2px 2px #000;
-            line-height: 1.2; /* Ajustar para espaciado entre líneas */
-        }
-        #game-over-message .spacer { /* Espaciador para líneas vacías */
-            height: 1em; /* Altura de una línea de texto */
-            width: 100%; /* Asegurar que ocupe espacio */
-        }
-        #game-over-message #player-info-name,
-        #game-over-message #player-info-dni {
-            font-size: 32px; /* Mismo tamaño que el texto principal */
-            margin: 0; /* Controlar espaciado con .spacer */
-        }
-        #game-over-message #camera-image {
-            width: 75px; /* Mitad del ancho del botón Reiniciar */
-            height: auto;
-            margin: 15px auto; /* Centrar y dar margen */
-            display: block; /* Asegurar que se muestre como bloque para centrar */
-        }
-        #game-over-message #win-message-text {
-            font-size: 32px; /* Mismo tamaño que el texto principal */
-            margin-top: 0; /* Controlar espaciado con .spacer o margen de imagen */
-            margin-bottom: 20px; /* Espacio antes del botón Reiniciar */
-        }
-        #game-over-message button {
-            padding: 15px 30px; /* Botón más grande */
-            font-size: 24px; /* Texto del botón más grande */
-            margin-top: 0; /* Ya hay margen en el texto de arriba */
-            cursor: pointer;
-            background-color: #ffffff; /* Botón blanco */
-            color: #000000; /* Texto negro */
-            border: 2px solid #000000;
-            border-radius: 5px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.3); /* Ajuste de sombra */
-            transition: all 0.2s ease;
-            font-family: 'VT323', monospace; /* Aplicar fuente */
-        }
-        #game-over-message button:hover {
-            background-color: #e0e0e0;
-            box-shadow: 0 0 7px rgba(0,0,0,0.4);
-        }
-        /* Estilo para la sección del Leaderboard */
-        #leaderboard-section {
-            margin-top: 20px;
-            width: 100%;
-            max-width: 350px; /* Ancho para el leaderboard */
-            color: white;
-            font-family: 'VT323', monospace;
-            text-align: center;
-            border: 2px solid white;
-            padding: 10px;
-            box-sizing: border-box;
-            background-color: rgba(0,0,0,0.5);
-        }
-        #leaderboard-section h3 {
-            font-size: 28px;
-            margin-top: 0;
-            margin-bottom: 10px;
-            text-shadow: 1px 1px #000;
-        }
-        #leaderboard-list {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* Dos columnas */
-            gap: 5px 10px; /* Espacio entre filas y columnas */
-            font-size: 24px;
-            list-style: none; /* Eliminar viñetas */
-            padding: 0;
-            margin: 0;
-        }
-        #leaderboard-list li {
-            text-align: center;
-            white-space: nowrap; /* Evitar que el texto se rompa */
-            overflow: hidden; /* Ocultar el desbordamiento */
-            text-overflow: ellipsis; /* Mostrar puntos suspensivos si se desborda */
-        }
-        #leaderboard-list li.leaderboard-name { /* Nombres en la columna izquierda */
-            text-align: right;
-        }
-        #leaderboard-list li.leaderboard-score { /* Puntajes en la columna derecha */
-            text-align: left;
-        }
+      .text-shadow-retro {
+        text-shadow: 2px 2px 0px #000;
+      }
 
-        /* Pantalla de inicio */
-        #start-screen {
-            position: fixed; /* Posicionamiento fijo para cubrir toda la ventana */
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #ffffff; /* Pantalla completamente blanca */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #000000; /* Texto negro */
-            z-index: 1000;
-            text-align: center;
-            padding: 0 20px; /* Márgenes a izquierda y derecha para el contenido */
-            box-sizing: border-box; /* Incluir padding en el ancho total */
-            pointer-events: auto; /* Asegura que la pantalla de inicio reciba clics */
-        }
-        #start-screen-logo-h1 { /* Clase para la imagen del logo en h1 */
-            width: 150px; /* Ajustado al ancho del logo superior */
-            height: auto;
-            margin-bottom: 10px; /* Espacio debajo de la imagen */
-            display: block; /* Para centrar con margin: auto */
-        }
-        #start-screen h1 { 
-            font-size: 36px; /* Más pequeño que 40px */
-            margin-top: 0px; /* Ajustado para acercar al logo */
-            margin-bottom: 10px; 
-            /* text-shadow: 2px 2px #000; ELIMINADO: Sombra del texto Burger Run */
-            font-family: 'VT323', monospace; /* Aplicar fuente */
-            color: #000000; /* Asegurar color negro */
-        }
-        #start-screen #burger-run-title-logo { /* Estilo para la imagen del título */
-            width: 150px; /* Ancho igual al logo de Burgerboy */
-            height: auto;
-            margin-top: 0px; /* Acercar al logo superior */
-            margin-bottom: 10px; /* Espacio debajo */
-        }
-        #start-screen p { 
-            font-size: 16px; /* Más pequeño que 18px */
-            margin-bottom: 5px; /* Ajustar margen inferior para las nuevas líneas */
-            font-family: 'VT323', monospace; /* Aplicar fuente */
-            color: #000000; /* Asegurar color negro */
-        }
-        #start-screen #disclaimer-text {
-            font-size: 10px; /* Letras muy pequeñas */
-            margin-top: 15px; /* Espacio para separar del botón JUGAR */
-            margin-bottom: 0px;
-            line-height: 1.3;
-            max-width: 300px; /* Limitar ancho para que no se extienda demasiado */
-        }
-        .input-group {
-            margin-top: 15px; /* Espacio después de los textos de puntuación */
-            margin-bottom: 5px; /* Reducido para juntar los campos */
-            width: 100%;
-            max-width: 250px; /* Ancho máximo para los campos de entrada */
-            text-align: center; /* Centrar el contenido del grupo de entrada */
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 20px;
-            font-family: 'VT323', monospace;
-            color: #000000;
-            text-align: center; /* Centrar el texto de la etiqueta */
-        }
-        .input-group input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            font-size: 18px;
-            font-family: 'VT323', monospace;
-            border: 2px solid #000000;
-            background-color: #ffffff;
-            color: #000000;
-            box-sizing: border-box;
-            border-radius: 5px;
-            text-align: center; /* Centrar el texto dentro del input */
-        }
-        .required-asterisk {
-            color: red;
-            display: none; /* Oculto por defecto */
-            font-size: 20px;
-            margin-left: 5px;
-            vertical-align: middle;
-        }
-        #validation-message {
-            color: red;
-            font-size: 16px;
-            margin-bottom: 10px;
-            font-family: 'VT323', monospace;
-            display: none; /* Oculto por defecto */
-        }
-        #start-button {
-            padding: 15px 30px;
-            font-size: 20px;
-            cursor: pointer;
-            background-color: #000000; /* Botón negro */
-            color: white; /* Letra blanca */
-            border: none;
-            border-radius: 5px;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-            transition: all 0.2s ease;
-            font-family: 'VT323', monospace; /* Aplicar fuente */
-            pointer-events: auto; /* ¡Asegura que el botón reciba clics! */
-            touch-action: manipulation; /* Optimiza la respuesta táctil para el botón */
-            margin-top: 20px; /* Aumentado para separar del DNI/CE */
-        }
-        #start-button:hover {
-            background-color: #333333; /* Un poco más claro al pasar el ratón */
-            box-shadow: 3px 3px 7px rgba(0,0,0,0.4);
-        }
-        /* Estilo para el nuevo logo de la pantalla de inicio */
-        #start-screen-logo {
-            width: 150px; /* Ajusta el tamaño del logo según sea necesario */
-            height: auto;
-            margin-bottom: 0px; /* Ajustado para acercar a h1 */
-        }
+      /* Button interactions override for pixel boxes */
+      .btn-pixel-wrapper:active .pixel-inner {
+        transform: translateY(4px);
+      }
+      .btn-pixel-wrapper:active {
+        transform: none; 
+      }
 
-        /* Estilos para los controles móviles en pantalla */
-        #mobile-controls {
-            display: flex;
-            justify-content: center;
-            gap: 20px; /* Espacio entre botones */
-            /* Posicionamiento fuera del game-container, debajo de él */
-            margin-top: 15px; /* Espacio entre el game-container y los controles */
-            width: 400px; /* Ancho igual al contenedor del juego */
-            padding: 8px 10px; /* Padding vertical reducido */
-            box-sizing: border-box;
-            z-index: 1; /* Por debajo de las pantallas de UI, pero visible */
-            pointer-events: auto; /* Asegura que los controles reciban clics cuando están visibles */
-            background-color: transparent; /* Fondo transparente */
-            display: none; /* Se ocultan por defecto y se muestran solo cuando el juego inicia */
-        }
+      /* Heartbeat Animation for Logo */
+      @keyframes heartbeat {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+      
+      .animate-logo-pulse {
+        animation: heartbeat 2s infinite ease-in-out;
+      }
 
-        .control-button {
-            background-color: #000000; /* Fondo negro */
-            color: white;
-            font-family: 'VT323', monospace;
-            font-size: 20px; /* Tamaño de fuente ajustado */
-            padding: 8px 25px; /* Padding ajustado */
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            /* box-shadow: 3px 3px 7px rgba(0,0,0,0.4); ELIMINADO: Sombra de los botones de dirección */
-            transition: background-color 0.1s ease;
-            user-select: none; /* Evita selección de texto al tocar */
-            -webkit-user-select: none; /* Para iOS */
-            touch-action: manipulation; /* Mejora la respuesta táctil */
-            flex-grow: 1; /* Permite que los botones se expandan para llenar el espacio */
-            max-width: 120px; /* Limitar el ancho de cada botón */
-            text-align: center;
-        }
-
-        .control-button:active {
-            background-color: #333333; /* Color al presionar */
-            /* box-shadow: 1px 1px 3px rgba(0,0,0,0.4); ELIMINADO: Sombra al presionar */
-        }
+      /* --- PIXEL ART CORNERS (Escalonado) --- */
+      .pixel-clip {
+        clip-path: polygon(
+          0px 4px, 4px 4px, 4px 0px,
+          calc(100% - 4px) 0px, calc(100% - 4px) 4px, 100% 4px,
+          100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+          4px 100%, 4px calc(100% - 4px), 0px calc(100% - 4px)
+        );
+      }
     </style>
+    
+    <!-- ROBUST IMPORT MAP: STRICTLY REACT 18 -->
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0"
+  }
+}
+</script>
 </head>
 <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2W98TT7"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-    <div id="start-screen">
-        <img id="start-screen-logo" src="descarga%20(1).png" alt="Burger Logo">
-        <img id="burger-run-title-logo" src="burger%20run%20logo.png" alt="Burger Run Logo">
-        <p>Esquiva los obstáculos y come todas las burgers que puedas.<br>Avanzar una fila = 1 punto<br>Comer una burger = 2 puntos</p>
-        <div class="spacer"></div> <!-- Línea vacía -->
-        <p>¡CONSIGUE 150 PUNTOS Y GÁNATE MERCH EXCLUSIVA DE BURGERBOY!</p>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useRef, useCallback } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { Trash2, Award, Play, RotateCcw, ChevronLeft, ChevronRight, ArrowUp, Skull, Lock, Gamepad2, Move } from 'lucide-react';
+
+        // ==========================================
+        // 1. ASSETS & CONSTANTS
+        // ==========================================
         
-        <div class="input-group">
-            <label for="playerName">NOMBRE:<span id="nameAsterisk" class="required-asterisk">*</span></label>
-            <input type="text" id="playerName" required>
-        </div>
-        <div class="input-group">
-            <label for="playerDNI">DNI / CE:<span id="dniAsterisk" class="required-asterisk">*</span></label>
-            <input type="text" id="playerDNI" required>
-        </div>
-        <p id="validation-message">Por favor rellena los campos requeridos.</p>
+        const GAME_ASSETS = {
+            LOGO: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/logo1.png",
+            IMAGINED_BY: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/imaginedbyBG.png",
+            SPLASH_BG: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/playa1.png", 
+            
+            // CHARACTERS
+            PLAYER_MATEO: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/MateoPlayer.gif",
+            PLAYER_ANA: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/ana1.gif",
+            
+            // POWER UPS
+            POWER_CAN: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/lata1.png",
+            POWER_BUBBLE: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/bubble1.png",
 
-        <button id="start-button">JUGAR</button>
+            // AUDIO
+            MUSIC_BG: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/408efe5d77d229042ea878ad5cdd219df39c73ce/Untitled.mp3",
+            SFX_COLLECT: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/ec7e957306cc84aaca09b7ae617afd65bf33f921/obj.wav",
+            SFX_EXPLOSION: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/ec7e957306cc84aaca09b7ae617afd65bf33f921/explosion.wav",
+            SFX_POWERUP: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/4d481af71e4a117e675f085b04748bb23394c7f1/powerup1.wav",
+            SFX_POWER_DESTROY: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/4d481af71e4a117e675f085b04748bb23394c7f1/powerupdestroy1.wav",
 
-        <p id="disclaimer-text">
-            Promoción válida solo el 31 de mayo de 2025 durante el BURGERFEST. Participa en el juego “BURGER RUN” escaneando el QR en el stand de Burgerboy. Si alcanzas 150 puntos y presentas tu pantalla de “¡GANASTE!” con nombre y DNI/CE en el stand de Burgerboy, podrás reclamar 1 premio (merch oficial) sujeto a disponibilidad. Máximo 1 premio por persona. Requiere seguir a Burgerboy en todas sus redes.
-        </p>
-    </div>
+            // BASURA
+            TRASH_BOTTLE: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/botella.png",
+            TRASH_BAG: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/bolsa.png",
+            TRASH_TIRE: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/llanta.png",
+            TRASH_BOOT: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/bota.png",
 
-    <div id="game-over-message">
-        <h2>GAME OVER</h2> <!-- Título fijo GAME OVER -->
-        <div class="spacer"></div> 
-        <p>Tu puntaje final: <span id="final-score">0</span></p>
-        <div class="spacer"></div> 
-        <p>NOMBRE:</p>
-        <p id="player-info-name"></p> 
-        <p>DNI / CE:</p>
-        <p id="player-info-dni"></p>   
-        <div class="spacer"></div> 
-        <img id="camera-image" src="camera.png" alt="Camera Icon">
-        <p id="win-message-text"></p> 
-        <div id="leaderboard-section">
-            <h3>MEJORES PUNTUACIONES</h3>
-            <ul id="leaderboard-list">
-                <!-- Los elementos del leaderboard se insertarán aquí por JavaScript -->
-                <li>Cargando...</li> 
-            </ul>
-        </div>
-        <button id="restart-button" disabled>Reiniciar</button> </div>
+            // ENEMIGOS
+            ENEMY_JELLYFISH: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/medusa.png",
+            ENEMY_SHARK: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/tiburon.png",
+            
+            // FONDO
+            BG_LAYER: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/fondo1.png",
 
-    <!-- Nuevo wrapper para escalar todo el juego y la UI -->
-    <div id="main-game-wrapper">
-        <div id="game-container">
-            <div id="player"></div>
-            </div>
-
-        <div id="mobile-controls">
-            <button id="left-button" class="control-button">←</button>
-            <button id="up-button" class="control-button">↑</button>
-            <button id="right-button" class="control-button">→</button>
-        </div>
-
-        <div id="score-board">
-            <div class="score-item">
-                <span class="score-text">Filas avanzadas:</span>
-                <span id="score" class="score-number">0</span>
-            </div>
-            <img src="descarga%20(1).png" alt="Burger Logo Score">
-            <div class="score-item">
-                <span class="score-text">Burgers comidas:</span>
-                <span id="coins" class="score-number">0</span>
-            </div>
-        </div>
-    </div>
-
-
-    <audio id="background-music" loop preload="auto">
-        <source src="City%20Echoes.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="spawn-sound" preload="auto">
-        <source src="spawn.MP3" type="audio/mpeg">
-    </audio>
-    <audio id="coin-sound" preload="auto">
-        <source src="beep.MP3" type="audio/mpeg">
-    </audio>
-    <audio id="lose-sound" preload="auto">
-        <source src="lose.mp3" type="audio/mpeg">
-    </audio>
-
-    <script>
-        // PWA: Registrar el Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                // RUTA CORREGIDA PARA EL SERVICE WORKER
-                // Importante: La ruta aquí debe ser relativa a la raíz del dominio de GitHub Pages.
-                // Si tu repo es nsanchezbg.github.io/BrandGeeksBB/, entonces la raíz de tu PWA es /BrandGeeksBB/
-                navigator.serviceWorker.register('/BrandGeeksBB/service-worker.js') 
-                    .then(registration => {
-                        console.log('Service Worker registrado con éxito:', registration);
-                    })
-                    .catch(error => {
-                        console.log('Fallo el registro del Service Worker:', error);
-                    });
-            });
-        }
-
-        // --- INICIO: DECLARACIONES DE CONSTANTES Y VARIABLES GLOBALES (MOVIDAS AL PRINCIPIO) ---
-        // Constantes del juego
-        const TILE_SIZE = 40; // TILE_SIZE vuelve a ser fijo, ya que el escalado es global
-        const GAME_WIDTH_TILES_ORIGINAL = 10; // Ancho original en baldosas (para cálculos de TILE_SIZE)
-        const GAME_HEIGHT_TILES_ORIGINAL = 15; // Alto original en baldosas (para cálculos de TILE_SIZE)
-        const TOTAL_LANES_BUFFER = 20; // Número total de filas generadas (incluye las fuera de pantalla)
-
-        // Variables de estado del juego
-        let playerPos = { x: 0, y: 0 }; // Posición del jugador en unidades de baldosa
-        let score = 0; // Filas avanzadas
-        let coins = 0; // Monedas recolectadas
-        let lanes = []; // Array que almacena los datos de cada fila
-        let gameOver = false; // Indica si el juego ha terminado
-        let gameLoopId; // ID del frame de animación
-        let currentMaxY = 0; // La fila más lejana alcanzada por el jugador
-        let gameStarted = false; // Indica si el juego ha comenzado
-
-        // Variables para almacenar la información del jugador
-        let currentPlayerName = '';
-        let currentPlayerDNI = '';
-
-        // Parámetros de dificultad
-        const INITIAL_SAFE_LANES = 5; // Número de filas iniciales seguras (hierba)
-        const DIFFICULTY_INCREASE_INTERVAL = 20; // Intervalo de puntuación para aumentar la dificultad
-        const MAX_OBSTACLE_SPEED = 4; // Velocidad máxima para los obstáculos
-        const MIN_OBSTACLE_SPEED = 1; // Velocidad mínima para los obstáculos
-
-        // Tipos de carriles permitidos (solo hierba y asfalto)
-        const laneTypes = ['grass', 'road'];
-        // Tipos de obstáculos (coches en asfalto, cuadrados en hierba)
-        const obstacleTypes = {
-            road: [{ type: 'car', width: 2 }], // Los coches tienen un ancho de 2 baldosas
-            grass: [{ type: 'square_obstacle', width: 1 }] // Nuevo obstáculo para hierba: un cuadrado negro
+            // DECORACIÓN
+            DECO_ALGA_1: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/alga1.png",
+            DECO_ALGA_2: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/alga2.png",
+            DECO_ALGA_3: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/alga3.png",
+            DECO_CORAL_1: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/coral1.png",
+            DECO_CORAL_2: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/coral2.png",
+            DECO_CORAL_3: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/coral3.png",
+            DECO_CORAL_4: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/coral4.png",
+            DECO_CORAL_5: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/coral5.png",
+            DECO_ROCK_1: "https://raw.githubusercontent.com/nsanchezBG/MarineroSTSBG/main/roca1.png"
         };
 
-        // Variables y URLs para el parpadeo del jugador
-        const playerEyesOpenURL = 'player.png'; // Asumiendo que esta es la imagen del jugador con ojos abiertos
-        const playerEyesClosedURL = 'player-blink.png'; // URL de la imagen de parpadeo
-        let isPlayerBlinking = false;
-        let blinkTimer = 0;
-        const BLINK_INTERVAL_MIN = 180; // Mínimo de frames entre parpadeos (ej. 3 segundos a 60 FPS)
-        const BLINK_INTERVAL_MAX = 360; // Máximo de frames entre parpadeos (ej. 6 segundos)
-        const BLINK_DURATION = 5; // Frames que los ojos permanecen cerrados (muy corto para un parpadeo)
+        const CUSTOM_MESSAGES = [
+            { title: "Marinero de Agua Dulce", message: "¡Buen inicio! Pero el mar necesita más limpieza." },
+            { title: "Grumete Reciclador", message: "¡Bien hecho! Esa basura ya no dañará a las tortugas." },
+            { title: "Capitán del Arrecife", message: "¡Increíble! Tu red está llena de buenas acciones." },
+            { title: "Almirante Ecológico", message: "¡El océano te saluda! Una puntuación legendaria." },
+            { title: "Poseidón de la Limpieza", message: "¡Nadie cuida el mar mejor que tú!" }
+        ];
 
-        // Variables para el control de dirección del jugador
-        let playerFacingDirection = 1; // 1 para izquierda (por defecto), -1 para derecha (reflejado)
-        // --- FIN: DECLARACIONES DE CONSTANTES Y VARIABLES GLOBALES ---
-
-
-        // Obtener referencias a los elementos del DOM
-        const gameContainer = document.getElementById('game-container');
-        const player = document.getElementById('player');
-        const scoreDisplay = document.getElementById('score');
-        const coinsDisplay = document.getElementById('coins');
-        const gameOverMessage = document.getElementById('game-over-message');
-        const finalScoreDisplay = document.getElementById('final-score');
-        const restartButton = document.getElementById('restart-button');
-        const startScreen = document.getElementById('start-screen');
-        const startButton = document.getElementById('start-button');
-        const gameOverText = document.getElementById('game-over-text'); // Nuevo elemento para el texto de game over
-        const playerNameInput = document.getElementById('playerName'); // Campo de nombre
-        const playerDNIInput = document.getElementById('playerDNI');   // Campo de DNI
-        const playerInfoNameDisplay = document.getElementById('player-info-name'); // Div para mostrar nombre del jugador
-        const playerInfoDNIDisplay = document.getElementById('player-info-dni');   // Div para mostrar DNI del jugador
-        const validationMessage = document.getElementById('validation-message'); // Mensaje de validación
-        const nameAsterisk = document.getElementById('nameAsterisk'); // Asterisco de nombre
-        const dniAsterisk = document.getElementById('dniAsterisk');     // Asterisco de DNI
-        const cameraImage = document.getElementById('camera-image'); // Imagen de la cámara
-        const winMessageText = document.getElementById('win-message-text'); // Texto de "Toma una captura..."
-        const backgroundMusic = document.getElementById('background-music'); // Elemento de audio
-        const spawnSound = document.getElementById('spawn-sound'); // Sonido de spawn
-        const coinSound = document.getElementById('coin-sound');   // Sonido de coin
-        const loseSound = document.getElementById('lose-sound');   // Sonido de lose
-
-        // Referencias a los elementos del leaderboard
-        const leaderboardSection = document.getElementById('leaderboard-section');
-        const leaderboardList = document.getElementById('leaderboard-list');
-
-        // Controles móviles
-        const leftButton = document.getElementById('left-button');
-        const upButton = document.getElementById('up-button');
-        const rightButton = document.getElementById('right-button');
-        const mobileControls = document.getElementById('mobile-controls'); // Referencia a los controles móviles
-
-        // --- INICIO: Configuración de Google Sheets / Apps Script ---
-        const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxUVG_I0HyMxd-c2Wr9BKVsOqjBVT8FdsjFaccUJ2GDcv6kMah4l30-gbLgO4Xi9aM/exec'; // ¡TU URL DE APPS SCRIPT AQUÍ!
-        const SPREADSHEET_ID = '1VAU3X8HdUMwcH2T9-3bitYXvfBQ7oB6-oAxSlxV2ISA'; // ¡TU ID DE GOOGLE SHEET AQUÍ!
-        // --- FIN: Configuración de Google Sheets / Apps Script ---
-
-        /**
-         * Envía el puntaje del jugador a Google Sheets a través de Google Apps Script.
-         * @param {string} playerName - Nombre del jugador.
-         * @param {string} playerDNI - DNI del jugador.
-         * @param {number} finalScore - Puntaje final del jugador.
-         */
-        async function sendScoreToGoogleSheets(playerName, playerDNI, finalScore) {
-            try {
-                const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // Necesario para evitar errores CORS en App Script simple
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        playerName: playerName,
-                        playerDNI: playerDNI,
-                        finalScore: finalScore
-                    }),
-                });
-                // Dado que mode: 'no-cors' se usa, no podemos leer la respuesta real
-                // pero la solicitud se envía.
-                console.log('Datos enviados a Google Sheets (respuesta no verificable debido a no-cors).');
-            } catch (error) {
-                console.error('Error al enviar datos a Google Sheets:', error);
-            }
-        }
-
-        /**
-         * Obtiene las mejores puntuaciones de Google Sheets a través de Google Apps Script.
-         */
-        async function fetchLeaderboard() {
-            if (!leaderboardList) {
-                console.error("Leaderboard list element not found.");
-                return;
-            }
-            leaderboardList.innerHTML = '<li>Cargando...</li>'; // Mostrar mensaje de carga
-            try {
-                const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
-                    method: 'GET',
-                    mode: 'cors' // 'cors' sí permite leer la respuesta
-                });
-                const scores = await response.json();
-                displayLeaderboard(scores);
-            } catch (error) {
-                console.error('Error al obtener el leaderboard:', error);
-                leaderboardList.innerHTML = '<li>Error al cargar el leaderboard.</li>';
-            }
-        }
-
-        /**
-         * Muestra las puntuaciones del leaderboard en la lista.
-         * @param {Array<Object>} scores - Array de objetos con las puntuaciones (ej. [{Nombre: "...", Puntaje: ...}]).
-         */
-        function displayLeaderboard(scores) {
-            if (!leaderboardList) { // Verificar si el elemento existe antes de manipularlo
-                console.error("Leaderboard list element not found for displayLeaderboard.");
-                return;
-            }
-            leaderboardList.innerHTML = ''; // Limpiar lista existente
-            if (scores && scores.length > 0) {
-                scores.forEach((scoreEntry, index) => {
-                    const listItemName = document.createElement('li');
-                    listItemName.classList.add('leaderboard-name');
-                    listItemName.textContent = `${index + 1}. ${scoreEntry.Nombre || 'Anónimo'}`; // Usar scoreEntry.Nombre
-                    leaderboardList.appendChild(listItemName); // Añadir a la lista
-
-                    const listItemScore = document.createElement('li');
-                    listItemScore.classList.add('leaderboard-score');
-                    listItemScore.textContent = scoreEntry.Puntaje || 0; // Usar scoreEntry.Puntaje
-                    leaderboardList.appendChild(listItemScore); // Añadir a la lista
-                });
-            } else {
-                leaderboardList.innerHTML = '<li>No hay puntuaciones aún.</li>';
-            }
-        }
-
-
-        /**
-         * Calcula y aplica el tamaño dinámico de los tiles y elementos del juego.
-         */
-        function resizeGameElements() {
-            // TILE_SIZE ya es una constante global fija de 40px
-            // Esta función ahora solo asegura que los elementos del juego se posicionen correctamente
-            // y que los elementos de UI externos ajusten su ancho para coincidir con el contenedor del juego.
-
-            // Player
-            player.style.width = (TILE_SIZE * 0.9) + 'px'; // 90% del tile size
-            player.style.height = (TILE_SIZE * 0.9) + 'px';
-
-            // Lanes
-            document.querySelectorAll('.lane').forEach(laneElement => {
-                laneElement.style.height = TILE_SIZE + 'px';
-            });
-
-            // Obstacles
-            document.querySelectorAll('.obstacle').forEach(obsElement => {
-                obsElement.style.width = (obsElement.dataset.originalWidth * TILE_SIZE - (TILE_SIZE * 0.1)) + 'px';
-                obsElement.style.height = (TILE_SIZE * 0.9) + 'px';
-            });
-
-            // Coins
-            document.querySelectorAll('.coin').forEach(coinElement => {
-                coinElement.style.width = (TILE_SIZE * 0.5) + 'px'; // 50% del tile size
-                coinElement.style.height = (TILE_SIZE * 0.5) + 'px';
-                // Reajustar la posición de la moneda para centrarla en el tile
-                coinElement.style.left = (parseFloat(coinElement.dataset.xTile) * TILE_SIZE + (TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px';
-                coinElement.style.top = ((TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px';
-            });
-            
-            // Re-posicionar el jugador con el nuevo TILE_SIZE (aunque TILE_SIZE es fijo, esto es buena práctica)
-            updatePlayerPosition();
-
-            // Ajustar el ancho de los elementos externos para que coincidan con el ancho del game-container (400px)
-            const scoreBoard = document.getElementById('score-board');
-            const mobileControls = document.getElementById('mobile-controls');
-
-            // Ajusta el ancho de los elementos externos para que coincidan con el ancho escalado del game-container
-            scoreBoard.style.width = gameContainer.offsetWidth + 'px'; // Usar el offsetWidth del gameContainer
-            mobileControls.style.width = gameContainer.offsetWidth + 'px'; // Usar el offsetWidth del gameContainer
-
-            // Ajusta el tamaño de la fuente en el score-board y mobile-controls proporcionalmente
-            scoreBoard.style.fontSize = (TILE_SIZE * 0.6) + 'px'; // Ajusta el tamaño de la fuente
-            scoreBoard.querySelector('.score-text').style.fontSize = (TILE_SIZE * 0.6) + 'px'; 
-            scoreBoard.querySelector('.score-number').style.fontSize = (TILE_SIZE * 0.6) + 'px';
-            scoreBoard.querySelector('img').style.height = (TILE_SIZE * 1.25) + 'px'; // Escala el logo
-
-            mobileControls.querySelectorAll('.control-button').forEach(button => {
-                button.style.fontSize = (TILE_SIZE * 0.5) + 'px';
-                button.style.padding = (TILE_SIZE * 0.2) + 'px ' + (TILE_SIZE * 0.6) + 'px';
-                button.style.borderRadius = (TILE_SIZE * 0.25) + 'px';
-            });
-        }
-
-
-        /**
-         * Crea un elemento de carril (div) y lo añade al contenedor del juego.
-         * @param {string} type - Tipo de carril ('grass' o 'road').
-         * @param {number} yPos - Posición Y del carril en unidades de baldosa.
-         * @returns {HTMLElement} El elemento div del carril creado.
-         */
-        function createLaneElement(type, yPos) {
-            const laneDiv = document.createElement('div');
-            laneDiv.classList.add('lane', type);
-            laneDiv.style.bottom = (yPos * TILE_SIZE) + 'px'; // Posicionar desde abajo
-            laneDiv.style.height = TILE_SIZE + 'px'; // Asegurar altura correcta
-            gameContainer.appendChild(laneDiv);
-            return laneDiv;
-        }
-
-        /**
-         * Crea un elemento de obstáculo (div) y lo añade al carril especificado.
-         * @param {object} lane - Objeto del carril al que se añade el obstáculo.
-         * @param {object} obsData - Datos del obstáculo (tipo, ancho).
-         * @returns {HTMLElement} El elemento div del obstáculo creado.
-         */
-        function createObstacleElement(lane, obsData) {
-            const obsDiv = document.createElement('div');
-            obsDiv.classList.add('obstacle', obsData.type);
-            obsDiv.style.width = (obsData.width * TILE_SIZE - (TILE_SIZE * 0.1)) + 'px'; // -10% del tile size para el borde/espacio
-            obsDiv.style.height = (TILE_SIZE * 0.9) + 'px'; // 90% del tile size
-            obsDiv.dataset.originalWidth = obsData.width; // Guardar para reajuste en resizeGameElements
-            // El color del obstáculo se define en CSS como negro
-            obsDiv.style.position = 'absolute'; // Los obstáculos se posicionan absolutamente dentro de su carril
-            lane.element.appendChild(obsDiv); // Añadir al elemento DOM del carril
-            return obsDiv;
-        }
+        const LOGICAL_WIDTH = 450; 
+        const LOGICAL_HEIGHT = 800;
         
-        /**
-         * Crea un elemento de moneda (div) y lo añade al carril especificado.
-         * @param {object} lane - Objeto del carril al que se añade la moneda.
-         * @param {number} xPosTile - Posición X de la moneda en unidades de baldosa.
-         * @returns {HTMLElement} El elemento div de la moneda creado.
-         */
-        function createCoinElement(lane, xPosTile) {
-            const coinDiv = document.createElement('div');
-            coinDiv.classList.add('coin');
-            // Posición izquierda ajustada para centrar la imagen de la moneda (20x20px)
-            coinDiv.style.left = (xPosTile * TILE_SIZE + (TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px'; // 50% del tile size
-            coinDiv.style.top = ((TILE_SIZE - (TILE_SIZE * 0.5)) / 2) + 'px'; // Centrar verticalmente en el carril
-            coinDiv.style.width = (TILE_SIZE * 0.5) + 'px';
-            coinDiv.style.height = (TILE_SIZE * 0.5) + 'px';
-            coinDiv.dataset.xTile = xPosTile; // Guardar la posición del tile para el reajuste
-            lane.element.appendChild(coinDiv);
-            return coinDiv;
-        }
+        const GRAVITY = 0.25;
+        const SWIM_FORCE = -7; 
+        const FRICTION = 0.96;
+        
+        // Colors updated per user request
+        const COLORS = {
+            BRAND_RED: '#d2362a', // UPDATED
+            BRAND_YELLOW: '#facc15', // KEEPING CONTRAST
+            BRAND_BLUE_LIGHT: '#38bdf8',
+            BRAND_BLUE_DARK: '#0369a1',
+            SAND: '#fcd34d',
+            BUBBLE: 'rgba(255, 255, 255, 0.6)'
+        };
 
-        /**
-         * Genera los datos y el elemento DOM para una nueva fila del juego.
-         * @param {number} yPos - Posición Y del carril en unidades de baldosa.
-         * @returns {object} Objeto que contiene los datos del carril.
-         */
-        function generateLane(yPos) {
-            let type;
-            let currentDifficultyLevel = Math.floor(score / DIFFICULTY_INCREASE_INTERVAL);
+        // ==========================================
+        // 2. COMPONENT: GAME CANVAS
+        // ==========================================
 
-            // Asegurar que las filas iniciales sean seguras (hierba)
-            if (yPos < INITIAL_SAFE_LANES) {
-                type = 'grass';
-            } else {
-                // Aumentar la probabilidad de carriles de asfalto a medida que aumenta la dificultad
-                let randomValue = Math.random();
-                if (currentDifficultyLevel === 0) { // Juego temprano, principalmente hierba
-                    type = (randomValue < 0.8) ? 'grass' : 'road';
-                } else if (currentDifficultyLevel === 1) { // Medio: 1-2 obstáculos
-                    type = (randomValue < 0.5) ? 'grass' : 'road';
-                } else { // Difícil: 2-3 obstáculos
-                    type = laneTypes[Math.floor(Math.random() * laneTypes.length)];
+        const GameCanvas = ({ status, onScoreUpdate, onGameOver, playSfx, sessionId, playerSrc, joystickRef }) => {
+            const canvasRef = useRef(null);
+            const domPlayerRef = useRef(null);
+            const requestRef = useRef(0);
+            const frameCountRef = useRef(0);
+            const facingRef = useRef('RIGHT');
+            const [images, setImages] = useState({});
+            const nextDecoSpawnRef = useRef(30);
+            
+            const keysRef = useRef(new Set());
+
+            useEffect(() => {
+                const loaded = {};
+                const keys = Object.keys(GAME_ASSETS).filter(k => !k.startsWith('PLAYER_') && !k.startsWith('MUSIC') && !k.startsWith('SFX'));
+                let count = 0;
+                if (keys.length === 0) return;
+                keys.forEach(key => {
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+                    img.src = GAME_ASSETS[key];
+                    img.onload = () => { loaded[key] = img; count++; if(count === keys.length) setImages(loaded); };
+                    img.onerror = () => { count++; if(count === keys.length) setImages(loaded); };
+                });
+            }, []);
+
+            const gameState = useRef({
+                player: { x: 50, y: LOGICAL_HEIGHT/2, vx: 0, vy: 0, width: 80, height: 80, invincible: 0, bubbleTimer: 0 },
+                entities: [],
+                decorations: [],
+                particles: [],
+                score: 0
+            });
+
+            useEffect(() => {
+                const down = (e) => keysRef.current.add(e.key);
+                const up = (e) => keysRef.current.delete(e.key);
+                const touchDown = (e) => keysRef.current.add(e.detail.key);
+                const touchUp = (e) => keysRef.current.delete(e.detail.key);
+                window.addEventListener('keydown', down);
+                window.addEventListener('keyup', up);
+                window.addEventListener('game-input-down', touchDown);
+                window.addEventListener('game-input-up', touchUp);
+                return () => {
+                    window.removeEventListener('keydown', down);
+                    window.removeEventListener('keyup', up);
+                    window.removeEventListener('game-input-down', touchDown);
+                    window.removeEventListener('game-input-up', touchUp);
+                };
+            }, []);
+            
+            // --- Reset Logic ---
+            useEffect(() => {
+                 gameState.current = {
+                    player: { x: 50, y: LOGICAL_HEIGHT/2, vx: 0, vy: 0, width: 80, height: 80, invincible: 0, bubbleTimer: 0 },
+                    entities: [],
+                    decorations: [],
+                    particles: [],
+                    score: 0
+                };
+                frameCountRef.current = 0;
+                nextDecoSpawnRef.current = 30;
+                keysRef.current.clear();
+                facingRef.current = 'RIGHT'; 
+                onScoreUpdate(0);
+            }, [sessionId, onScoreUpdate]);
+
+            const loop = useCallback(() => {
+                if (status === 'PAUSED' || status === 'GAME_OVER') return;
+                
+                const state = gameState.current;
+                const { player } = state;
+                const keys = keysRef.current;
+                frameCountRef.current++;
+                
+                // Allow drawing background in SPLASH and START
+                if (status === 'START' || status === 'SPLASH') return;
+
+                const fc = frameCountRef.current;
+
+                if (fc % 100 === 0) { 
+                    const types = ['TRASH_BOTTLE', 'TRASH_TIRE', 'TRASH_BAG', 'TRASH_BOOT'];
+                    const type = types[Math.floor(Math.random()*types.length)];
+                    state.entities.push({ type, id: Math.random(), x: LOGICAL_WIDTH + 50, y: Math.random() * (LOGICAL_HEIGHT - 300) + 100, w: 60, h: 60, vx: -2 - Math.random(), vy: 0, asset: type });
                 }
-            }
-
-            const laneElement = createLaneElement(type, yPos);
-            // Calcular la velocidad de los obstáculos basada en la dificultad
-            let newSpeed = MIN_OBSTACLE_SPEED + (MAX_OBSTACLE_SPEED - MIN_OBSTACLE_SPEED) * (currentDifficultyLevel / 10);
-            newSpeed = Math.min(newSpeed, MAX_OBSTACLE_SPEED); // Asegurar que la velocidad no exceda el máximo
-
-            // Asegurar que la velocidad sea diferente a la del carril anterior para mayor variedad
-            if (yPos > 0 && lanes[yPos - 1]) {
-                const prevLaneSpeed = lanes[yPos - 1].speed;
-                while (newSpeed === prevLaneSpeed) {
-                    newSpeed = MIN_OBSTACLE_SPEED + Math.random() * (MAX_OBSTACLE_SPEED - MIN_OBSTACLE_SPEED);
-                    newSpeed = Math.min(newSpeed, MAX_OBSTACLE_SPEED);
+                if (fc % 180 === 0) { 
+                    const types = ['ENEMY_JELLYFISH', 'ENEMY_SHARK'];
+                    const type = types[Math.floor(Math.random()*types.length)];
+                    const isShark = type === 'ENEMY_SHARK';
+                    state.entities.push({ type, id: Math.random(), x: LOGICAL_WIDTH + 50, y: Math.random() * (LOGICAL_HEIGHT - 300) + 100, w: isShark ? 150 : 60, h: isShark ? 60 : 60, vx: isShark ? -4 - Math.random() : -2, vy: isShark ? 0 : Math.sin(fc/50)*0.5, asset: type });
                 }
-            }
-
-            const laneData = {
-                y: yPos,
-                type: type,
-                element: laneElement,
-                obstacles: [],
-                coins: [], // Array para objetos de moneda
-                direction: (Math.random() < 0.5 ? 1 : -1), // Dirección del movimiento de obstáculos
-                speed: newSpeed // Velocidad asignada
-            };
-
-            // Generación de obstáculos
-            if (type === 'road') {
-                let currentX = (laneData.direction === 1) ? -TILE_SIZE * 3 : GAME_WIDTH_TILES_ORIGINAL * TILE_SIZE; // Usar GAME_WIDTH_TILES_ORIGINAL
-                let numObstacles = 0;
-
-                // Ajustar el número de obstáculos según la dificultad
-                if (currentDifficultyLevel === 0) { // Fácil: 0-1 obstáculos
-                    numObstacles = Math.random() < 0.6 ? 0 : 1; // Mayor probabilidad de 0 obstáculos
-                } else if (currentDifficultyLevel === 1) { // Medio: 1-2 obstáculos
-                    numObstacles = Math.floor(Math.random() * 2) + 1;
-                } else { // Difícil: 2-3 obstáculos
-                    numObstacles = Math.floor(Math.random() * 2) + 2;
+                if (fc % 600 === 0 && Math.random() > 0.3) {
+                    state.entities.push({ type: 'POWER_UP', id: Math.random(), x: LOGICAL_WIDTH + 50, y: Math.random() * (LOGICAL_HEIGHT - 300) + 100, w: 50, h: 70, vx: -3, vy: Math.sin(fc/20)*1, asset: 'POWER_CAN' });
                 }
+                if (fc >= nextDecoSpawnRef.current) { 
+                    const allDecos = ['DECO_ALGA_1', 'DECO_ALGA_2', 'DECO_ALGA_3', 'DECO_CORAL_1', 'DECO_CORAL_2', 'DECO_CORAL_3', 'DECO_CORAL_4', 'DECO_CORAL_5', 'DECO_ROCK_1'];
+                    const assetKey = allDecos[Math.floor(Math.random()*allDecos.length)];
+                    let w = 50, h = 50; 
+                    if (assetKey.includes('ALGA')) { w = 40; h = 70; } else if (assetKey.includes('ROCK')) { w = 70; h = 45; } else { w = 60; h = 60; }
+                    state.decorations.push({ id: Math.random(), x: LOGICAL_WIDTH + 50, y: LOGICAL_HEIGHT - h - 30 + (Math.random()*10), w: w, h: h, vx: -1.5, asset: assetKey });
+                    nextDecoSpawnRef.current = fc + Math.floor(Math.random() * 80) + 40;
+                }
+                if (fc % 15 === 0) state.particles.push({ x: Math.random() * LOGICAL_WIDTH, y: LOGICAL_HEIGHT + 10, vx: 0, vy: -1 - Math.random()*2, life: 200, color: COLORS.BUBBLE, w: 2 + Math.random()*3, h: 2 + Math.random()*3 });
 
-                for (let i = 0; i < numObstacles; i++) {
-                    const obsTemplate = obstacleTypes[type][Math.floor(Math.random() * obstacleTypes[type].length)];
-                    const obsElement = createObstacleElement(laneData, obsTemplate);
+                let swim = false;
+                let dx = 0;
+
+                if (keys.has('ArrowUp') || keys.has(' ') || keys.has('w')) swim = true;
+                if (keys.has('ArrowLeft') || keys.has('a')) dx = -1;
+                if (keys.has('ArrowRight') || keys.has('d')) dx = 1;
+
+                if (joystickRef && joystickRef.current && joystickRef.current.active) {
+                    const j = joystickRef.current;
+                    // Horizontal
+                    if (j.x > 0.2) dx = 0.25; 
+                    else if (j.x < -0.2) dx = -0.25;
                     
-                    let obsXPos;
-                    if (laneData.direction === 1) {
-                        obsXPos = currentX;
-                        currentX -= (obsTemplate.width + (2 + Math.random() * 3)) * TILE_SIZE; // Espaciado
-                    } else {
-                        obsXPos = currentX;
-                        currentX += (obsTemplate.width + (2 + Math.random() * 3)) * TILE_SIZE; // Espaciado
+                    // Vertical
+                    if (j.y < -0.3) { 
+                        player.vy -= 0.45; 
+                        if (fc % 5 === 0) state.particles.push({ x: player.x + (facingRef.current === 'RIGHT' ? 0 : player.width), y: player.y + 40, vx: (Math.random()-0.5)*2, vy: 1, life: 20, color: 'rgba(255,255,255,0.5)', w:6, h:6 });
                     }
-                    
-                    laneData.obstacles.push({
-                        element: obsElement,
-                        x: obsXPos, // Posición en píxeles para el movimiento
-                        width: obsTemplate.width * TILE_SIZE,
-                        type: obsTemplate.type,
-                        initialX: obsXPos // Almacenar X inicial para reinicio
-                    });
-                    obsElement.style.left = obsXPos + 'px'; // Asegurar que la posición se aplique al elemento
+                    if (j.y > 0.3) player.vy += 0.4;
                 }
-            } else if (type === 'grass') {
-                // Añadir monedas a algunas filas de hierba
-                if (Math.random() < 0.4) { // Aumentado a 40% de probabilidad
-                    const MAX_COINS_TO_TRY_SPAWNING = 3; // Intentar generar hasta 3 burgers
-                    const COIN_SPAWN_CHANCE_PER_SLOT = 0.6; // 60% de probabilidad para cada intento
 
-                    let spawnedPositions = new Set(); // Para evitar burgers apiladas
+                if (swim) {
+                    player.vy += SWIM_FORCE * 0.15;
+                    if (fc % 5 === 0) state.particles.push({ x: player.x + (facingRef.current === 'RIGHT' ? 0 : player.width), y: player.y + 40, vx: (Math.random()-0.5)*2, vy: 1, life: 20, color: 'rgba(255,255,255,0.5)', w:6, h:6 });
+                }
 
-                    for (let i = 0; i < MAX_COINS_TO_TRY_SPAWNING; i++) {
-                        if (Math.random() < COIN_SPAWN_CHANCE_PER_SLOT) {
-                            let coinXTile;
-                            let attempts = 0;
-                            // Intentar encontrar una posición única
-                            do {
-                                coinXTile = Math.floor(Math.random() * GAME_WIDTH_TILES_ORIGINAL); // Usar GAME_WIDTH_TILES_ORIGINAL
-                                attempts++;
-                            } while (spawnedPositions.has(coinXTile) && attempts < GAME_WIDTH_TILES_ORIGINAL * 2); // Evitar bucle infinito
+                if (Math.abs(dx) > 0.01) {
+                    player.vx += dx * 0.2; 
+                    facingRef.current = dx > 0 ? 'RIGHT' : 'LEFT';
+                }
 
-                            if (!spawnedPositions.has(coinXTile)) {
-                                const coinElement = createCoinElement(laneData, coinXTile);
-                                laneData.coins.push({
-                                    element: coinElement,
-                                    x: coinXTile * TILE_SIZE, // Posición en píxeles para la colisión
-                                    y: 0, // Relativo al carril
-                                    collected: false
-                                });
-                                spawnedPositions.add(coinXTile);
+                player.vy += GRAVITY;
+                player.vx *= FRICTION;
+                player.vy *= FRICTION;
+
+                player.x += player.vx;
+                player.y += player.vy;
+                
+                if (player.y < 0) { player.y = 0; player.vy = 0; }
+                if (player.y > LOGICAL_HEIGHT - player.height - 40) { player.y = LOGICAL_HEIGHT - player.height - 40; player.vy = 0; }
+                if (player.x < 0) { player.x = 0; player.vx = 0; }
+                if (player.x > LOGICAL_WIDTH - player.width) { player.x = LOGICAL_WIDTH - player.width; player.vx = 0; }
+
+                if (player.invincible > 0) player.invincible--;
+                if (player.bubbleTimer > 0) player.bubbleTimer--;
+
+                state.entities.forEach(e => {
+                    e.x += e.vx; e.y += e.vy;
+                    if (e.asset === 'ENEMY_SHARK' && fc % 4 === 0) state.particles.push({x: e.x + e.w - 10, y: e.y + e.h / 2, vx: 2, vy: (Math.random() - 0.5) * 2, life: 25, color: 'rgba(255,255,255,0.4)', w: 5, h: 5});
+                    else if (e.asset === 'ENEMY_JELLYFISH' && fc % 15 === 0) state.particles.push({x: e.x + e.w / 2, y: e.y + e.h - 10, vx: 0, vy: 1, life: 40, color: 'rgba(255,255,255,0.3)', w: 3, h: 3});
+                    else if (e.type === 'POWER_UP' && fc % 10 === 0) state.particles.push({x: e.x + Math.random()*e.w, y: e.y + Math.random()*e.h, vx: 0, vy: -1, life: 20, color: '#fbbf24', w: 4, h: 4});
+                    
+                    if (player.x < e.x + e.w - 15 && player.x + player.width > e.x + 15 && player.y < e.y + e.h - 15 && player.y + player.height > e.y + 15) {
+                        if (e.type.startsWith('TRASH')) {
+                            e.delete = true; state.score += 10; onScoreUpdate(state.score); playSfx('COLLECT'); 
+                            let pColor = '#fff'; if (e.type.includes('TIRE')) pColor = '#1f2937'; else if (e.type.includes('BOOT')) pColor = '#78350f'; else if (e.type.includes('BAG')) pColor = '#9ca3af'; else if (e.type.includes('BOTTLE')) pColor = '#3b82f6';
+                            for(let i=0; i<8; i++) state.particles.push({x: e.x + e.w/2, y: e.y + e.h/2, vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12, life: 30, color: pColor, w: 8, h:8});
+                        } else if (e.type === 'POWER_UP') {
+                            e.delete = true; player.bubbleTimer = 600; playSfx('POWERUP'); 
+                            for(let i=0; i<15; i++) state.particles.push({x: player.x + player.width/2, y: player.y + player.height/2, vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15, life: 45, color: '#fcd34d', w: 6, h:6});
+                        } else if (e.type.startsWith('ENEMY')) {
+                            if (player.bubbleTimer > 0) {
+                                e.delete = true; playSfx('POWER_DESTROY'); 
+                                for(let i=0; i<10; i++) state.particles.push({x: e.x + e.w/2, y: e.y + e.h/2, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 30, color: '#60a5fa', w: 6, h:6});
+                            } else if (player.invincible === 0) { 
+                                // COLLISION LOGIC FIX: Stop immediately
+                                playSfx('EXPLOSION'); 
+                                player.vx = 0; // Stop horizontal movement
+                                player.vy = 0; // Stop vertical movement
+                                onGameOver(state.score); 
+                                return; // Stop processing this loop
                             }
                         }
                     }
+                    if (e.x < -150) e.delete = true;
+                });
+
+                state.decorations.forEach(d => { d.x += d.vx; if (d.x < -100) d.delete = true; });
+                state.particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life--; });
+                state.entities = state.entities.filter(e => !e.delete);
+                state.decorations = state.decorations.filter(d => !d.delete);
+                state.particles = state.particles.filter(p => p.life > 0);
+
+            }, [status, onScoreUpdate, onGameOver, playSfx]);
+
+            const draw = useCallback(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const state = gameState.current;
+
+                ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+                ctx.imageSmoothingEnabled = false;
+                
+                const grad = ctx.createLinearGradient(0, 0, 0, LOGICAL_HEIGHT);
+                grad.addColorStop(0, COLORS.BRAND_BLUE_LIGHT);
+                grad.addColorStop(1, COLORS.BRAND_BLUE_DARK);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+
+                if (images['BG_LAYER']) {
+                    const scrollSpeed = 0.5;
+                    const bgX = -(frameCountRef.current * scrollSpeed) % LOGICAL_WIDTH;
+                    ctx.drawImage(images['BG_LAYER'], Math.floor(bgX), 0, LOGICAL_WIDTH + 2, LOGICAL_HEIGHT);
+                    ctx.drawImage(images['BG_LAYER'], Math.floor(bgX) + LOGICAL_WIDTH - 2, 0, LOGICAL_WIDTH + 2, LOGICAL_HEIGHT);
                 }
 
-                // Añadir nuevo obstáculo cuadrado_negro en filas de hierba (máximo 1 por fila)
-                if (Math.random() < 0.3) { // 30% de probabilidad de añadir un obstáculo cuadrado
-                    const obsTemplate = obstacleTypes.grass[0]; // Solo hay un tipo de obstáculo para hierba
-                    const obsElement = createObstacleElement(laneData, obsTemplate);
-                    
-                    // Posicionar el obstáculo cuadrado aleatoriamente en el carril de hierba
-                    const obsXPos = Math.floor(Math.random() * (GAME_WIDTH_TILES_ORIGINAL - obsTemplate.width + 1)) * TILE_SIZE; // Usar GAME_WIDTH_TILES_ORIGINAL
+                ctx.fillStyle = COLORS.SAND;
+                ctx.fillRect(0, LOGICAL_HEIGHT - 40, LOGICAL_WIDTH, 40);
 
-                    laneData.obstacles.push({
-                        element: obsElement,
-                        x: obsXPos,
-                        width: obsTemplate.width * TILE_SIZE,
-                        type: obsTemplate.type,
-                        initialX: obsXPos
-                    });
-                    obsElement.style.left = obsXPos + 'px'; // ¡Esta línea es la corrección clave!
+                if (status === 'START' || status === 'SPLASH') return;
+
+                state.decorations.forEach(d => { if (images[d.asset]) ctx.drawImage(images[d.asset], d.x, d.y, d.w, d.h); });
+                
+                state.entities.forEach(e => {
+                    if (images[e.asset]) {
+                        let yOffset = 0;
+                        if (e.type === 'POWER_UP') yOffset = Math.sin(frameCountRef.current / 10) * 5;
+                        ctx.drawImage(images[e.asset], e.x, e.y + yOffset, e.w, e.h);
+                    } else { ctx.fillStyle = 'red'; ctx.fillRect(e.x, e.y, e.w, e.h); }
+                });
+
+                state.particles.forEach(p => { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.w, p.h); });
+
+                const p = state.player;
+                if (p.bubbleTimer > 0 && images['POWER_BUBBLE']) {
+                    const pulse = Math.sin(frameCountRef.current / 10) * 5;
+                    ctx.globalAlpha = 0.7;
+                    ctx.drawImage(images['POWER_BUBBLE'], p.x - 20 - pulse/2, p.y - 20 - pulse/2, p.width + 40 + pulse, p.height + 40 + pulse);
+                    ctx.globalAlpha = 1.0;
                 }
-            }
-            return laneData;
-        }
 
-        /**
-         * Inicializa todas las filas del juego, eliminando las existentes y creando nuevas.
-         */
-        function initLanes() {
-            lanes.forEach(lane => {
-                if (lane.element) gameContainer.removeChild(lane.element);
-            });
-            lanes = [];
-            for (let i = 0; i < TOTAL_LANES_BUFFER; i++) {
-                lanes.push(generateLane(i));
-            }
-        }
+                if (domPlayerRef.current) {
+                    const domEl = domPlayerRef.current;
+                    if (status === 'PLAYING' || status === 'PAUSED') {
+                        domEl.style.display = 'block';
+                        const leftPct = (p.x / LOGICAL_WIDTH) * 100;
+                        const topPct = (p.y / LOGICAL_HEIGHT) * 100;
+                        const wPct = (p.width / LOGICAL_WIDTH) * 100;
+                        const hPct = (p.height / LOGICAL_HEIGHT) * 100;
+                        domEl.style.left = `${leftPct}%`; domEl.style.top = `${topPct}%`; domEl.style.width = `${wPct}%`; domEl.style.height = `${hPct}%`;
+                        const scaleX = facingRef.current === 'LEFT' ? -1 : 1;
+                        domEl.style.transform = `scaleX(${scaleX})`;
+                        domEl.style.opacity = (p.invincible > 0 && Math.floor(Date.now()/100)%2 !== 0) ? '0.5' : '1';
+                    } else { domEl.style.display = 'none'; }
+                }
+            }, [images, status]);
 
-        /**
-         * Actualiza la posición visual del jugador en la pantalla.
-         */
-        function updatePlayerPosition() {
-            player.style.left = (playerPos.x * TILE_SIZE) + 'px'; 
-            player.style.bottom = (playerPos.y * TILE_SIZE) + 'px';
-            // Combina la transformación de desplazamiento con la de escala para la dirección
-            const scrollOffset = Math.max(0, (playerPos.y - Math.floor(GAME_HEIGHT_TILES_ORIGINAL / 2.5)) * TILE_SIZE); // Usar GAME_HEIGHT_TILES_ORIGINAL
-            player.style.transform = `translateY(${scrollOffset}px) scaleX(${playerFacingDirection})`;
-        }
+            useEffect(() => {
+                const animate = () => { loop(); draw(); requestRef.current = requestAnimationFrame(animate); };
+                requestRef.current = requestAnimationFrame(animate);
+                return () => cancelAnimationFrame(requestRef.current);
+            }, [loop, draw]);
 
-        /**
-         * Mueve al jugador en la dirección especificada.
-         * @param {number} dx - Cambio en la posición X (en unidades de baldosa).
-         * @param {number} dy - Cambio en la posición Y (en unidades de baldosa).
-         */
-        function movePlayer(dx, dy) {
-            if (gameOver) return;
+            return (
+                <div className="relative w-full h-full bg-black overflow-hidden shadow-2xl">
+                    <canvas ref={canvasRef} width={LOGICAL_WIDTH} height={LOGICAL_HEIGHT} style={{ width: '100%', height: '100%', objectFit: 'fill' }} />
+                    <img ref={domPlayerRef} src={playerSrc} className="absolute pointer-events-none hidden" alt="Player" style={{ imageRendering: 'pixelated', willChange: 'left, top, transform' }} />
+                </div>
+            );
+        };
 
-            const newX = playerPos.x + dx;
-            const newY = playerPos.y + dy;
-
-            // Actualiza la dirección visual del jugador si hay movimiento horizontal
-            if (dx > 0) { // Moviendo a la derecha
-                playerFacingDirection = -1; // Reflejar para que mire a la derecha
-            } else if (dx < 0) { // Moviendo a la izquierda
-                playerFacingDirection = 1; // Orientación normal para que mire a la izquierda
-            }
-
-            // Comprobaciones de límites
-            if (newX < 0 || newX >= GAME_WIDTH_TILES_ORIGINAL) return; // Usar GAME_WIDTH_TILES_ORIGINAL
-            if (newY < 0) return; // No se permite el movimiento hacia atrás
-
-            playerPos.x = newX;
-            playerPos.y = newY;
+        const App = () => {
+            const [status, setStatus] = useState('SPLASH'); // Initial State: SPLASH
+            const [score, setScore] = useState(0);
+            const [highScore, setHighScore] = useState(0);
+            const [gameOverMsg, setGameOverMsg] = useState(null);
+            const [sessionId, setSessionId] = useState(0); 
+            const [selectedChar, setSelectedChar] = useState('MATEO');
+            const [controlType, setControlType] = useState('ARROWS');
+            const [transitioning, setTransitioning] = useState(false); // Transition State
             
-            if (dy > 0) { // Si el jugador se movió hacia adelante
-                if (newY > currentMaxY) {
-                    score++; // Aumentar la puntuación por fila avanzada
-                    currentMaxY = newY;
-                    scoreDisplay.textContent = score;
-
-                    // Comprobar si se necesitan generar nuevas filas
-                    if (lanes[lanes.length -1].y < playerPos.y + GAME_HEIGHT_TILES_ORIGINAL) { // Usar GAME_HEIGHT_TILES_ORIGINAL
-                       addNewLaneAtTop();
-                    }
-                }
-            }
+            const joystickRef = useRef({ x: 0, y: 0, active: false });
+            const joystickStickRef = useRef(null);
+            const joystickBaseRef = useRef(null);
             
-            // Desplazamiento de la pantalla: Mover todo el contenido del contenedor del juego
-            // La transformación de desplazamiento de las lanes es independiente de la del player
-            const scrollOffset = Math.max(0, (playerPos.y - Math.floor(GAME_HEIGHT_TILES_ORIGINAL / 2.5)) * TILE_SIZE); // Usar GAME_HEIGHT_TILES_ORIGINAL
-            lanes.forEach(lane => {
-                lane.element.style.transform = `translateY(${scrollOffset}px)`;
-            });
-            // player.style.transform se actualiza en updatePlayerPosition()
+            // Ref to prevent pausing when joystick is released
+            const blockPauseRef = useRef(false);
             
-            updatePlayerPosition(); // Actualización visual del jugador
-            checkCollisions(); // Comprobar colisiones después del movimiento
-        }
-        
-        /**
-         * Añade una nueva fila en la parte superior del área de juego visible.
-         */
-        function addNewLaneAtTop() {
-            const newLaneY = lanes[lanes.length - 1].y + 1;
-            lanes.push(generateLane(newLaneY));
+            const musicRef = useRef(new Audio(GAME_ASSETS.MUSIC_BG));
+            const sfxCollectRef = useRef(new Audio(GAME_ASSETS.SFX_COLLECT));
+            const sfxExplosionRef = useRef(new Audio(GAME_ASSETS.SFX_EXPLOSION));
+            const sfxPowerUpRef = useRef(new Audio(GAME_ASSETS.SFX_POWERUP));
+            const sfxPowerDestroyRef = useRef(new Audio(GAME_ASSETS.SFX_POWER_DESTROY));
 
-            // Opcional: Eliminar filas muy antiguas que están muy por debajo del jugador
-            if (lanes.length > TOTAL_LANES_BUFFER + 5) {
-                const oldLane = lanes.shift();
-                if(oldLane.element.parentNode) {
-                    gameContainer.removeChild(oldLane.element);
-                }
-            }
-        }
+            useEffect(() => {
+                musicRef.current.loop = true;
+                musicRef.current.volume = 0.4;
+                sfxCollectRef.current.volume = 0.6;
+                sfxExplosionRef.current.volume = 0.7;
+                sfxPowerUpRef.current.volume = 0.7;
+                sfxPowerDestroyRef.current.volume = 0.7;
+            }, []);
 
-        /**
-         * Mueve los obstáculos en sus respectivos carriles.
-         */
-        function moveObstacles() {
-            lanes.forEach(lane => {
-                // Solo mover obstáculos en carriles de asfalto
-                if (lane.type === 'road') {
-                    lane.obstacles.forEach(obs => {
-                        obs.x += lane.speed * lane.direction; 
-                        // Reiniciar la posición del obstáculo si se sale de la pantalla
-                        if (lane.direction === 1 && obs.x > GAME_WIDTH_TILES_ORIGINAL * TILE_SIZE) { // Usar GAME_WIDTH_TILES_ORIGINAL
-                            obs.x = -obs.width; // Reiniciar a la izquierda
-                        } else if (lane.direction === -1 && obs.x + obs.width < 0) {
-                            obs.x = GAME_WIDTH_TILES_ORIGINAL * TILE_SIZE; // Reiniciar a la derecha // Usar GAME_WIDTH_TILES_ORIGINAL
-                        }
-                        obs.element.style.left = obs.x + 'px';
-                    });
-                }
-                // Los obstáculos de tipo 'grass' (square_obstacle) son estáticos, no se mueven.
-            });
-        }
+            useEffect(() => {
+                const music = musicRef.current;
+                if (status === 'PAUSED') music.pause(); else if(status !== 'SPLASH') music.play().catch(e => {}); 
+            }, [status]);
+            
+            const playSfx = useCallback((type) => {
+                if (type === 'COLLECT') { sfxCollectRef.current.currentTime = 0; sfxCollectRef.current.play().catch(e=>{}); }
+                else if (type === 'EXPLOSION') { sfxExplosionRef.current.currentTime = 0; sfxExplosionRef.current.play().catch(e=>{}); }
+                else if (type === 'POWERUP') { sfxPowerUpRef.current.currentTime = 0; sfxPowerUpRef.current.play().catch(e=>{}); }
+                else if (type === 'POWER_DESTROY') { sfxPowerDestroyRef.current.currentTime = 0; sfxPowerDestroyRef.current.play().catch(e=>{}); }
+            }, []);
 
-        /**
-         * Comprueba las colisiones entre el jugador y los obstáculos o monedas.
-         */
-        function checkCollisions() {
-            if (gameOver) return;
-            const playerRect = {
-                x: playerPos.x * TILE_SIZE,
-                y: playerPos.y * TILE_SIZE, // Posición Y base del carril del jugador
-                width: TILE_SIZE,
-                height: TILE_SIZE
+            const emitInput = (key, type) => {
+                const event = new CustomEvent(type === 'down' ? 'game-input-down' : 'game-input-up', { detail: { key } });
+                window.dispatchEvent(event);
             };
             
-            const currentLane = lanes.find(l => l.y === playerPos.y);
-            if (!currentLane) {
-                console.warn("El jugador está en un carril inexistente:", playerPos.y);
-                setGameOver();
-                return;
-            }
+            // --- SMOOTH TRANSITION HELPER ---
+            const transitionTo = (newStatus) => {
+                setTransitioning(true);
+                setTimeout(() => {
+                    setStatus(newStatus);
+                    setTransitioning(false);
+                }, 500); // 500ms fade out
+            };
+            
+            // Logic wrapper for restart to handle state reset
+            const restartGame = () => {
+                // NO TRANSITION FOR RESTART (INSTANT)
+                setSessionId(prev => prev + 1);
+                setScore(0);
+                joystickRef.current = { x: 0, y: 0, active: false };
+                blockPauseRef.current = false;
+                if (joystickStickRef.current) joystickStickRef.current.style.transform = `translate(0px, 0px)`;
+                setStatus('PLAYING');
+            };
 
-            // Colección de monedas
-            if (currentLane.type === 'grass' && currentLane.coins) {
-                currentLane.coins.forEach((coin, index) => {
-                    if (!coin.collected) {
-                        const coinRect = {
-                            x: coin.x + (TILE_SIZE - (TILE_SIZE * 0.5)) / 2, // X de la moneda es relativo al inicio del carril, ajustado para centrar
-                            y: currentLane.y * TILE_SIZE + (TILE_SIZE - (TILE_SIZE * 0.5)) / 2, // Usar Y absoluto del carril, ajustado para centrar
-                            width: (TILE_SIZE * 0.5), height: (TILE_SIZE * 0.5)
-                        };
-                         // Colisión AABB para la moneda
-                        if (playerRect.x < coinRect.x + coinRect.width &&
-                            playerRect.x + playerRect.width > coinRect.x &&
-                            playerRect.y < coinRect.y + coinRect.height &&
-                            playerRect.y + playerRect.height > coinRect.y) {
-                            
-                            coin.collected = true;
-                            if(coin.element.parentNode) coin.element.parentNode.removeChild(coin.element); // Eliminar moneda visualmente
-                            coins++; // Aumentar contador de monedas
-                            coinsDisplay.textContent = coins;
-                            // Eliminar del array para evitar volver a comprobar
-                            currentLane.coins.splice(index, 1);
-                            if (coinSound) { // Reproducir sonido de moneda
-                                coinSound.currentTime = 0; // Reiniciar sonido
-                                coinSound.play().catch(error => console.error("Error al reproducir sonido de moneda:", error));
-                            }
-                        }
-                    }
+            const handleStart = useCallback(() => { 
+                // Trigger Transition to PLAYING (Keep transition here)
+                setTransitioning(true);
+                setTimeout(() => {
+                    setSessionId(prev => prev + 1); 
+                    setScore(0); 
+                    // Reset Joystick
+                    joystickRef.current = { x: 0, y: 0, active: false };
+                    blockPauseRef.current = false;
+                    if (joystickStickRef.current) joystickStickRef.current.style.transform = `translate(0px, 0px)`;
+                    setStatus('PLAYING');
+                    setTransitioning(false);
+                }, 500);
+            }, []);
+
+            const handleGameOver = useCallback((finalScore) => { 
+                // NO TRANSITION FOR GAME OVER (INSTANT)
+               setStatus('GAME_OVER'); 
+               setHighScore(h => Math.max(h, finalScore)); 
+               setGameOverMsg(CUSTOM_MESSAGES[Math.floor(Math.random() * CUSTOM_MESSAGES.length)]);
+            }, []);
+            
+            const togglePause = () => { 
+                if (blockPauseRef.current) return; 
+                if (status === 'PLAYING') setStatus('PAUSED'); else if (status === 'PAUSED') setStatus('PLAYING'); 
+            };
+            
+            // NEW: Handle Splash Screen Click (Audio Unlock) with Transition
+            const handleSplashClick = () => {
+                const music = musicRef.current;
+                music.play().then(() => {
+                    transitionTo('START');
+                }).catch(e => {
+                    transitionTo('START');
                 });
-            }
+            };
 
-            // Colisiones con obstáculos en carriles de asfalto o hierba
-            if (currentLane.type === 'road' || currentLane.type === 'grass') {
-                currentLane.obstacles.forEach(obs => {
-                    const obsRect = {
-                        x: obs.x,
-                        y: currentLane.y * TILE_SIZE, // Los obstáculos están en este carril
-                        width: obs.width,
-                        height: TILE_SIZE
-                    };
-                    // Comprobación de colisión AABB
-                    if (playerRect.x < obsRect.x + obsRect.width &&
-                        playerRect.x + playerRect.width > obsRect.x &&
-                        playerRect.y === obsRect.y) { // Misma fila
-                        setGameOver(); // Terminar el juego si hay colisión
-                    }
-                });
-            }
-        }
-
-        /**
-         * Establece el estado del juego a "terminado" y muestra el mensaje de fin de juego.
-         */
-        async function setGameOver() { // Marcar como async para await fetchLeaderboard
-            gameOver = true;
-            gameStarted = false;
-            cancelAnimationFrame(gameLoopId); // Detener el bucle del juego
-            
-            const finalScore = score + (2 * coins);
-            finalScoreDisplay.textContent = finalScore;
-
-            // Mostrar información del jugador
-            // Asegúrate de que playerInfoNameDisplay y playerInfoDNIDisplay no sean null
-            if (playerInfoNameDisplay) playerInfoNameDisplay.textContent = currentPlayerName;
-            if (playerInfoDNIDisplay) playerInfoDNIDisplay.textContent = currentPlayerDNI;
-
-            // Ocultar controles móviles
-            mobileControls.style.display = 'none';
-            // Deshabilitar interacción con el juego
-            gameContainer.style.pointerEvents = 'none';
-
-            // Reproducir sonido de fin de juego
-            if (loseSound) {
-                loseSound.currentTime = 0; // Reiniciar sonido
-                loseSound.play().catch(error => console.error("Error al reproducir sonido de fin de juego:", error));
-            }
-
-            // Cambiar la condición de victoria a 150 puntos
-            if (finalScore >= 150) { 
-                if (gameOverText) gameOverText.textContent = "¡GANASTE!";
-                if (winMessageText) winMessageText.textContent = "Toma una captura a esta pantalla o déjala abierta y acércate a nuestro stand.";
-                if (winMessageText) winMessageText.style.display = 'block'; // Mostrar texto de "Toma una captura..."
-                if (cameraImage) cameraImage.style.display = 'block'; // Mostrar imagen de cámara si ganó
-            } else {
-                if (gameOverText) gameOverText.textContent = "GAME OVER"; // Siempre "GAME OVER" si no gana
-                if (winMessageText) winMessageText.style.display = 'none'; // Ocultar texto de "Toma una captura..."
-                if (cameraImage) cameraImage.style.display = 'none'; // Ocultar imagen de cámara si perdió
-            }
-
-            gameOverMessage.style.display = 'flex'; // Mostrar el mensaje de fin de juego (now with display: flex)
-            
-            // Enviar puntuación antes de obtener el leaderboard
-            await sendScoreToGoogleSheets(currentPlayerName, currentPlayerDNI, finalScore);
-            // Obtener y mostrar el leaderboard
-            await fetchLeaderboard();
-
-            // Habilitar el botón de reiniciar después de un breve retraso
-            if (restartButton) restartButton.disabled = true; // Asegurarse de que esté deshabilitado al mostrar la pantalla
-            setTimeout(() => {
-                if (restartButton) restartButton.disabled = false; // Habilitar el botón después de 500ms
-            }, 500); // Retraso de 0.5 segundos
-        }
-
-        /**
-         * Función para actualizar la animación de parpadeo del jugador.
-         */
-        function updatePlayerBlinking() {
-            if (gameOver || !gameStarted) {
-                player.style.backgroundImage = `url('${playerEyesOpenURL}')`; // Asegurar ojos abiertos si el juego no está activo
-                return;
-            }
-
-            if (!isPlayerBlinking) {
-                blinkTimer--;
-                if (blinkTimer <= 0) {
-                    isPlayerBlinking = true;
-                    blinkTimer = BLINK_DURATION; // Duración de los ojos cerrados
-                    player.style.backgroundImage = `url('${playerEyesClosedURL}')`;
-                }
-            } else {
-                blinkTimer--;
-                if (blinkTimer <= 0) {
-                    isPlayerBlinking = false;
-                    // Intervalo aleatorio para el próximo parpadeo
-                    blinkTimer = Math.floor(Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN + 1)) + BLINK_INTERVAL_MIN;
-                    player.style.backgroundImage = `url('${playerEyesOpenURL}')`;
-                }
-            }
-        }
-
-        /**
-         * El bucle principal del juego, que se ejecuta en cada frame de animación.
-         */
-        function gameLoop() {
-            if (gameOver || !gameStarted) return;
-            moveObstacles(); // Mover los obstáculos
-            checkCollisions(); // Comprobar colisiones
-            updatePlayerBlinking(); // Actualizar la animación de parpadeo
-            gameLoopId = requestAnimationFrame(gameLoop); // Solicitar el siguiente frame
-        }
-
-        /**
-         * Reinicia el juego a su estado inicial.
-         */
-        function resetGame() {
-            console.log('resetGame called'); // Log para depuración
-            // Validar campos de nombre y DNI solo si se está iniciando desde la pantalla de inicio
-            if (!gameStarted) { // Solo validar en el primer inicio, no en reinicios desde game over
-                let isValid = true;
-                // Ocultar mensajes de validación y asteriscos
-                if (validationMessage) validationMessage.style.display = 'none';
-                if (nameAsterisk) nameAsterisk.style.display = 'none';
-                if (dniAsterisk) dniAsterisk.style.display = 'none';
-
-                if (!playerNameInput.value.trim()) {
-                    if (nameAsterisk) nameAsterisk.style.display = 'inline';
-                    isValid = false;
-                }
-                if (!playerDNIInput.value.trim()) {
-                    if (dniAsterisk) dniAsterisk.style.display = 'inline';
-                    isValid = false;
-                }
-
-                if (!isValid) {
-                    if (validationMessage) validationMessage.style.display = 'block';
-                    console.error('Validación fallida: Campos requeridos no rellenados.'); // Log de error para depuración
-                    return; // No iniciar el juego si los campos están vacíos
-                }
-                currentPlayerName = playerNameInput.value.trim();
-                currentPlayerDNI = playerDNIInput.value.trim();
-            }
-
-
-            playerPos = { x: Math.floor(GAME_WIDTH_TILES_ORIGINAL / 2), y: 1 }; // Posición inicial del jugador
-            score = 0; // Reiniciar puntuación
-            coins = 0; // Reiniciar monedas
-            currentMaxY = playerPos.y; // Reiniciar la fila más lejana alcanzada
-            gameOver = false; // El juego no ha terminado
-            
-            scoreDisplay.textContent = score; // Actualizar marcador
-            coinsDisplay.textContent = coins; // Actualizar monedas
-            gameOverMessage.style.display = 'none'; // Ocultar mensaje de fin de juego
-            
-            initLanes(); // Regenerar todas las filas
-            updatePlayerPosition(); // Restablecer la posición visual del jugador
-
-            // Reset scroll
-            const scrollOffset = 0;
-            lanes.forEach(lane => {
-                lane.element.style.transform = `translateY(${scrollOffset}px)`;
-            });
-            // player.style.transform se actualiza en updatePlayerPosition()
-
-            gameStarted = true; // El juego ha comenzado
-            gameLoop(); // Iniciar el bucle del juego
-            mobileControls.style.display = 'flex'; // Mostrar controles móviles al iniciar el juego
-            gameContainer.style.pointerEvents = 'auto'; // Habilitar interacción con el juego
-            startScreen.style.display = 'none'; // Ocultar la pantalla de inicio
-
-            // Reproducir música al iniciar el juego
-            if (backgroundMusic) {
-                backgroundMusic.play().catch(error => {
-                    console.error("Error al intentar reproducir la música de fondo:", error);
-                    // Esto puede ocurrir si el navegador bloquea la reproducción automática
-                    // Podrías mostrar un mensaje al usuario para que toque la pantalla para activar el sonido
-                });
-            }
-            // Reproducir sonido de spawn
-            if (spawnSound) {
-                spawnSound.currentTime = 0; // Reiniciar sonido
-                spawnSound.play().catch(error => console.error("Error al reproducir sonido de spawn:", error));
-            }
-
-            // --- GTM: Enviar evento de inicio de ronda de juego ---
-            if (typeof dataLayer !== 'undefined') {
-                let currentEngagementType;
-                // Si gameStarted es FALSE al principio de esta función, es el primer juego.
-                // Si gameStarted es TRUE, es un reinicio.
-                // La variable `gameStarted` se actualizará a `true` después de esta lógica,
-                // así que `!gameStarted` aquí indica si es la *primera* vez que se llama desde la pantalla de inicio.
-                if (!gameStarted) { 
-                    currentEngagementType = 'initial_play';
-                } else { 
-                    currentEngagementType = 'restart_play';
+            // --- JOYSTICK LOGIC ---
+            const updateStick = useCallback((clientX, clientY) => {
+                if (!joystickBaseRef.current || !joystickStickRef.current) return;
+                
+                const baseRect = joystickBaseRef.current.getBoundingClientRect();
+                const centerX = baseRect.left + baseRect.width / 2;
+                const centerY = baseRect.top + baseRect.height / 2;
+                
+                const deltaX = clientX - centerX;
+                const deltaY = clientY - centerY;
+                
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const maxDist = baseRect.width / 2;
+                
+                let clampedX = deltaX;
+                let clampedY = deltaY;
+                
+                if (distance > maxDist) {
+                    const angle = Math.atan2(deltaY, deltaX);
+                    clampedX = Math.cos(angle) * maxDist;
+                    clampedY = Math.sin(angle) * maxDist;
                 }
                 
-                dataLayer.push({
-                    'event': 'game_round_start', // Nombre del evento
-                    'engagement_type': currentEngagementType,
-                    'player_name': currentPlayerName,
-                    'player_dni': currentPlayerDNI
-                });
-            }
-            // --- Fin GTM Evento ---
-        }
+                joystickStickRef.current.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
+                joystickRef.current.x = clampedX / maxDist;
+                joystickRef.current.y = clampedY / maxDist;
+            }, []);
 
-        // --- Lógica de Control Táctil ---
-        let touchStartX = 0;
-        let touchStartY = 0;
-        const SWIPE_THRESHOLD = 30; // Mínima distancia para considerar un deslizamiento
-
-        // Ahora los listeners de touch están en gameContainer, que es el área de juego
-        gameContainer.addEventListener('touchstart', (e) => {
-            // Prevenir el desplazamiento de la página al tocar el contenedor del juego
-            e.preventDefault(); 
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        }, { passive: false }); // Usar { passive: false } para permitir preventDefault
-
-        gameContainer.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // Prevenir el desplazamiento de la página durante el deslizamiento
-        }, { passive: false });
-
-        gameContainer.addEventListener('touchend', (e) => {
-            if (gameOver || !gameStarted) return;
-
-            const touchEndX = e.changedTouches[0].clientX;
-            const touchEndY = e.changedTouches[0].clientY;
-
-            const dx = touchEndX - touchStartX;
-            const dy = touchEndY - touchStartY;
-
-            // Determinar si es un deslizamiento horizontal o vertical
-            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
-                // Deslizamiento horizontal
-                if (dx > 0) {
-                    movePlayer(1, 0); // Deslizar a la derecha
+            const onGlobalMove = useCallback((e) => {
+                if (!joystickRef.current.active) return;
+                if(e.cancelable && e.type !== 'mousemove') e.preventDefault(); 
+                
+                let clientX, clientY;
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
                 } else {
-                    movePlayer(-1, 0); // Deslizar a la izquierda
+                    clientX = e.clientX;
+                    clientY = e.clientY;
                 }
-            } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > SWIPE_THRESHOLD) { 
-                // Deslizamiento vertical
-                if (dy < 0) { // Deslizar hacia arriba (Y disminuye)
-                    movePlayer(0, 1); // Mover hacia adelante
+                updateStick(clientX, clientY);
+            }, [updateStick]);
+
+            const onGlobalEnd = useCallback((e) => {
+                if (e.type === 'touchend') {
+                    if (e.cancelable) e.preventDefault();
                 }
-                // No hay movimiento hacia abajo en este juego
-            }
-        });
-        // --- Fin Lógica de Control Táctil ---
 
-        // Envuelve los listeners en DOMContentLoaded
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOMContentLoaded fired.'); // Log para depuración
-            // Precargar la imagen de parpadeo para evitar el efecto de "desaparición"
-            const preloadBlinkImage = new Image();
-            preloadBlinkImage.src = playerEyesClosedURL;
+                joystickRef.current.active = false;
+                joystickRef.current.x = 0;
+                joystickRef.current.y = 0;
+                if (joystickStickRef.current) joystickStickRef.current.style.transform = `translate(0px, 0px)`;
+                
+                setTimeout(() => {
+                    blockPauseRef.current = false;
+                }, 100);
 
-            // Llamar a resizeGameElements al inicio y en cada cambio de tamaño de ventana
-            resizeGameElements();
-            window.addEventListener('resize', resizeGameElements);
+                window.removeEventListener('mousemove', onGlobalMove);
+                window.removeEventListener('mouseup', onGlobalEnd);
+                window.removeEventListener('touchmove', onGlobalMove);
+                window.removeEventListener('touchend', onGlobalEnd);
+                window.removeEventListener('touchcancel', onGlobalEnd);
+            }, [onGlobalMove]);
 
-            // Añadir listeners de eventos
-            restartButton.addEventListener('click', resetGame); // Botón de reinicio
-            
-            // El botón de inicio ahora valida los campos antes de iniciar el juego
-            startButton.addEventListener('click', resetGame); 
-
-            // Event listeners para los nuevos botones de control móvil
-            leftButton.addEventListener('click', () => {
-                if (gameStarted && !gameOver) {
-                    movePlayer(-1, 0);
+            const handleJoystickStart = useCallback((e) => {
+                e.stopPropagation(); 
+                
+                if(e.cancelable && e.type === 'touchstart') e.preventDefault(); 
+                
+                joystickRef.current.active = true;
+                blockPauseRef.current = true; 
+                
+                window.addEventListener('mousemove', onGlobalMove);
+                window.addEventListener('mouseup', onGlobalEnd);
+                window.addEventListener('touchmove', onGlobalMove, { passive: false }); 
+                window.addEventListener('touchend', onGlobalEnd, { passive: false });
+                window.addEventListener('touchcancel', onGlobalEnd, { passive: false });
+                
+                let clientX, clientY;
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
                 }
-            });
-            upButton.addEventListener('click', () => {
-                if (gameStarted && !gameOver) {
-                    movePlayer(0, 1);
-                }
-            });
-            rightButton.addEventListener('click', () => {
-                if (gameStarted && !gameOver) {
-                    movePlayer(1, 0);
-                }
-            });
+                updateStick(clientX, clientY);
+            }, [onGlobalMove, onGlobalEnd, updateStick]);
 
-            // Control de movimiento del jugador con las teclas de flecha (para PC)
-            document.addEventListener('keydown', (e) => {
-                if (!gameStarted && e.key !== "Escape") return;
-                if (gameOver) return;
+            return (
+                <div className="w-full h-full bg-slate-900 flex justify-center items-center overflow-hidden font-pixel select-none relative">
+                    
+                    {/* GLOBAL FADE OVERLAY */}
+                    <div className={`absolute inset-0 bg-black z-[100] pointer-events-none transition-opacity duration-500 ease-in-out ${transitioning ? 'opacity-100' : 'opacity-0'}`}></div>
 
-                switch (e.key) {
-                    case 'ArrowUp':
-                        movePlayer(0, 1); // Mover hacia arriba
-                        break;
-                    case 'ArrowDown':
-                        // movePlayer(0, -1); // Deshabilitado el movimiento hacia abajo
-                        break;
-                    case 'ArrowLeft':
-                        movePlayer(-1, 0); // Mover hacia la izquierda
-                        break;
-                    case 'ArrowRight':
-                        movePlayer(1, 0); // Mover hacia la derecha
-                        break;
-                }
-            });
+                    <div className="relative h-full w-full mx-auto bg-black shadow-2xl overflow-hidden ring-4 ring-black/20" style={{ maxWidth: '56.25vh' }} onClick={() => { if (status === 'PLAYING' || status === 'PAUSED') togglePause(); }}>
+                        
+                        <div className="absolute inset-0 z-0 bg-[#0369a1]">
+                            <GameCanvas sessionId={sessionId} status={status} onScoreUpdate={setScore} onGameOver={handleGameOver} playSfx={playSfx} playerSrc={GAME_ASSETS['PLAYER_' + selectedChar]} joystickRef={joystickRef} />
+                        </div>
 
-            // Configuración inicial al cargar la página
-            playerPos = { x: Math.floor(GAME_WIDTH_TILES_ORIGINAL / 2), y: 1 }; // Posición inicial del jugador
-            initLanes(); // Inicializar las filas
-            updatePlayerPosition(); // Actualizar posición del jugador
-            // Inicializar el temporizador de parpadeo al cargar la página
-            blinkTimer = Math.floor(Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN + 1)) + BLINK_INTERVAL_MIN;
-        });
+                        <div className="scanline z-10 opacity-30 pointer-events-none"></div>
+
+                        {/* HUD (Top) - HIDDEN ON START/SPLASH */}
+                        {(status !== 'START' && status !== 'SPLASH') && (
+                            <div className="absolute top-8 left-0 right-0 z-20 px-4 pointer-events-none">
+                                <div className="relative bg-brandYellow p-1 pixel-clip shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] pointer-events-auto">
+                                    <div className="bg-brandRed h-16 flex items-center justify-between px-4 text-white w-full pixel-clip">
+                                        <div className="flex items-center gap-2"><Trash2 className="w-5 h-5 text-brandYellow" /><span className="text-2xl font-bold tracking-widest text-shadow-retro">{score.toString().padStart(5,'0')}</span></div>
+                                        <div className="flex items-center gap-2"><Award className="w-5 h-5 text-brandYellow" /><span className="text-2xl font-bold tracking-widest text-shadow-retro">{highScore.toString().padStart(5,'0')}</span></div>
+                                    </div>
+                                </div>
+                                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-24 w-40 flex items-center justify-center pointer-events-none"><img src={GAME_ASSETS.LOGO} alt="Marinero Logo" className="h-20 object-contain drop-shadow-xl z-10 animate-logo-pulse" /></div>
+                            </div>
+                        )}
+
+                        {/* CONTROLS (Bottom) */}
+                        {(status === 'PLAYING' || status === 'PAUSED') && (
+                            <div className="absolute bottom-0 left-0 right-0 z-30 p-4 pb-8 flex justify-between items-end pointer-events-none select-none">
+                                {controlType === 'ARROWS' ? (
+                                    <>
+                                        <div className="flex gap-4 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+                                            <div className="btn-pixel-wrapper w-16 h-16 md:w-20 md:h-20 active:translate-y-1 transition-transform touch-manipulation">
+                                                <div className="w-full h-full bg-[#ca8a04] p-1 pixel-clip shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]" onTouchStart={(e) => { e.preventDefault(); emitInput('ArrowLeft', 'down'); }} onTouchEnd={(e) => { e.preventDefault(); emitInput('ArrowLeft', 'up'); }} onMouseDown={() => emitInput('ArrowLeft', 'down')} onMouseUp={() => emitInput('ArrowLeft', 'up')} onMouseLeave={() => emitInput('ArrowLeft', 'up')}>
+                                                    <div className="pixel-inner w-full h-full bg-brandYellow pixel-clip flex items-center justify-center transition-transform"><ChevronLeft className="w-10 h-10 text-brandRed" strokeWidth={4} /></div>
+                                                </div>
+                                            </div>
+                                            <div className="btn-pixel-wrapper w-16 h-16 md:w-20 md:h-20 active:translate-y-1 transition-transform touch-manipulation">
+                                                <div className="w-full h-full bg-[#ca8a04] p-1 pixel-clip shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]" onTouchStart={(e) => { e.preventDefault(); emitInput('ArrowRight', 'down'); }} onTouchEnd={(e) => { e.preventDefault(); emitInput('ArrowRight', 'up'); }} onMouseDown={() => emitInput('ArrowRight', 'down')} onMouseUp={() => emitInput('ArrowRight', 'up')} onMouseLeave={() => emitInput('ArrowRight', 'up')}>
+                                                    <div className="pixel-inner w-full h-full bg-brandYellow pixel-clip flex items-center justify-center transition-transform"><ChevronRight className="w-10 h-10 text-brandRed" strokeWidth={4} /></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+                                            <div className="btn-pixel-wrapper w-20 h-20 md:w-24 md:h-24 active:translate-y-1 transition-transform touch-manipulation">
+                                                <div className="w-full h-full bg-[#7f1d1d] p-1 pixel-clip shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)]" onTouchStart={(e) => { e.preventDefault(); emitInput(' ', 'down'); }} onTouchEnd={(e) => { e.preventDefault(); emitInput(' ', 'up'); }} onMouseDown={() => emitInput(' ', 'down')} onMouseUp={() => emitInput(' ', 'up')} onMouseLeave={() => emitInput(' ', 'up')}>
+                                                    <div className="pixel-inner w-full h-full bg-brandRed pixel-clip flex flex-col items-center justify-center transition-transform"><ArrowUp className="w-10 h-10 text-white mb-1" strokeWidth={4} /><span className="text-[10px] font-bold text-brandYellow text-shadow-retro">NADAR</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="w-full flex justify-center pb-4 pointer-events-auto" onClick={e => e.stopPropagation()}>
+                                        <div ref={joystickBaseRef} 
+                                             className="w-32 h-32 rounded-full bg-[#ca8a04]/80 border-4 border-brandYellow relative shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] touch-none"
+                                             onMouseDown={handleJoystickStart}
+                                             onTouchStart={handleJoystickStart}
+                                        >
+                                            <div ref={joystickStickRef} className="w-12 h-12 bg-brandRed rounded-full absolute top-1/2 left-1/2 -ml-6 -mt-6 border-2 border-[#fecaca] shadow-lg pointer-events-none" />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* SCREENS */}
+                        {status !== 'PLAYING' && (
+                            <div className={`absolute inset-0 z-40 flex items-center justify-center ${status === 'SPLASH' ? 'bg-transparent' : 'bg-black/60 backdrop-blur-sm'}`} onClick={(e) => { if (status === 'PAUSED') togglePause(); }}>
+                                
+                                {/* SPLASH SCREEN (NEW) */}
+                                {status === 'SPLASH' && (
+                                    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center cursor-pointer overflow-hidden" onClick={handleSplashClick}>
+                                        
+                                        <img 
+                                            src={GAME_ASSETS.SPLASH_BG} 
+                                            className="absolute inset-0 w-full h-full object-cover"
+                                            alt="Playa Background"
+                                        />
+                                        {/* OSCURECIMIENTO DE LA PLAYA */}
+                                        <div className="absolute inset-0 bg-black/30"></div>
+
+                                        <div className="scanline z-10 opacity-20 pointer-events-none"></div>
+                                        
+                                        {/* Logo Principal */}
+                                        <img src={GAME_ASSETS.LOGO} className="w-64 object-contain animate-bounce mb-8 z-20 relative" alt="Logo" />
+                                        
+                                        {/* Texto Start */}
+                                        <p className="absolute bottom-40 text-white text-2xl font-bold animate-pulse text-shadow-retro tracking-widest z-20 w-full text-center">TOCA LA PANTALLA PARA EMPEZAR</p>
+                                        
+                                        {/* Imagined By Logo */}
+                                        <img src={GAME_ASSETS.IMAGINED_BY} className="absolute bottom-8 w-24 object-contain z-20 opacity-80 drop-shadow-md" alt="Imagined by BG" />
+                                    </div>
+                                )}
+
+                                {status === 'PAUSED' && (
+                                    <div className="flex flex-col items-center animate-in fade-in zoom-in duration-200 pointer-events-none">
+                                        <h2 className="text-6xl text-brandYellow font-bold text-shadow-retro mb-4 animate-pulse">PAUSA</h2>
+                                        <p className="text-white text-xl text-shadow-retro animate-bounce">TOCA PARA CONTINUAR</p>
+                                    </div>
+                                )}
+
+                                {status === 'START' && (
+                                    <div className={`absolute -inset-1 z-50 flex flex-col items-center justify-center p-6 text-white w-[calc(100%+8px)] h-[calc(100%+8px)] bg-black/10 backdrop-blur-sm`} onClick={(e) => e.stopPropagation()}>
+                                        
+                                        <img src={GAME_ASSETS.LOGO} alt="Marinero" className="w-48 object-contain mb-6 animate-logo-pulse" />
+                                        
+                                        <h3 className="text-white font-bold text-4xl mb-8 leading-[0.75] text-shadow-retro text-center px-4 tracking-widest">
+                                            ¡AYUDA A MATEO<br />
+                                            Y SUS AMIGOS<br />
+                                            A LIMPIAR EL MAR!
+                                        </h3>
+                                        
+                                        <div className="flex flex-col items-center w-full max-w-sm gap-6">
+                                            
+                                            {/* CHAR SELECTOR */}
+                                            <div className="w-full flex flex-col items-center">
+                                                <p className="text-white text-lg mb-2 text-shadow-retro">Escoge a tu personaje favorito:</p>
+                                                <div className="grid grid-cols-4 gap-3 mb-2">
+                                                    <div onClick={() => setSelectedChar('MATEO')} className={`w-16 h-16 bg-[#1e293b] pixel-clip flex items-center justify-center cursor-pointer transition-all border-4 ${selectedChar === 'MATEO' ? 'border-brandYellow bg-[#334155]' : 'border-transparent hover:bg-[#334155]'}`}><img src={GAME_ASSETS.PLAYER_MATEO} className="w-12 h-12 object-contain" /></div>
+                                                    <div onClick={() => setSelectedChar('ANA')} className={`w-16 h-16 bg-[#1e293b] pixel-clip flex items-center justify-center cursor-pointer transition-all border-4 ${selectedChar === 'ANA' ? 'border-brandYellow bg-[#334155]' : 'border-transparent hover:bg-[#334155]'}`}><img src={GAME_ASSETS.PLAYER_ANA} className="w-12 h-12 object-contain" /></div>
+                                                    <div className="w-16 h-16 bg-[#0f172a] border-4 border-[#1e293b] pixel-clip flex items-center justify-center opacity-50"><Lock className="w-6 h-6 text-slate-600" /></div>
+                                                    <div className="w-16 h-16 bg-[#0f172a] border-4 border-[#1e293b] pixel-clip flex items-center justify-center opacity-50"><Lock className="w-6 h-6 text-slate-600" /></div>
+                                                </div>
+                                                <div className="text-brandYellow font-bold text-2xl text-shadow-retro uppercase tracking-widest">{selectedChar}</div>
+                                            </div>
+
+                                            {/* CONTROL SELECTOR */}
+                                            <div className="w-full flex flex-col items-center">
+                                                <p className="text-white text-base mb-2 text-shadow-retro">Tipo de Control:</p>
+                                                <div className="flex gap-4">
+                                                    <button onClick={() => setControlType('ARROWS')} className={`px-4 py-2 pixel-clip border-2 ${controlType === 'ARROWS' ? 'bg-brandYellow text-brandRed border-white' : 'bg-[#1e293b] text-slate-400 border-transparent'} flex items-center gap-2 transition-all`}>
+                                                        <Move className="w-5 h-5" /> 
+                                                        <span className="text-lg font-bold">FLECHAS</span>
+                                                    </button>
+                                                    <button onClick={() => setControlType('JOYSTICK')} className={`px-4 py-2 pixel-clip border-2 ${controlType === 'JOYSTICK' ? 'bg-brandYellow text-brandRed border-white' : 'bg-[#1e293b] text-slate-400 border-transparent'} flex items-center gap-2 transition-all`}>
+                                                        <Gamepad2 className="w-5 h-5" />
+                                                        <span className="text-lg font-bold">JOYSTICK</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <button onClick={handleStart} className="btn-pixel-wrapper w-20 h-20 group active:translate-y-1 transition-transform mt-4">
+                                                <div className="bg-brandRed p-1 pixel-clip shadow-[4px_4px_0px_0px_#a16207]">
+                                                    <div className="pixel-inner bg-brandYellow w-full h-full text-brandRed pixel-clip flex items-center justify-center group-hover:bg-yellow-300"><Play className="fill-current w-10 h-10" /></div>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {status === 'GAME_OVER' && (
+                                    <div className="w-full max-w-xs animate-in slide-in-from-bottom duration-500" onClick={(e) => e.stopPropagation()}>
+                                        <div className="bg-brandBlue p-1 pixel-clip shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]">
+                                            <div className="bg-white p-1 pixel-clip">
+                                                <div className="bg-[#f0f9ff] p-6 text-center flex flex-col items-center pixel-clip">
+                                                    <img src={GAME_ASSETS.LOGO} alt="Marinero" className="h-16 object-contain mb-4 animate-bounce" />
+                                                    <h2 className="text-4xl text-brandBlue font-bold mb-4 text-shadow-retro">¡OH NO!</h2>
+                                                    <div className="w-full bg-brandRed p-1 pixel-clip mb-6 shadow-sm transform -rotate-1">
+                                                        <div className="bg-white p-4 pixel-clip"><div className="text-xl text-slate-500 font-bold uppercase mb-1">Puntuación Final</div><div className="text-6xl font-black text-brandRed text-shadow-retro">{score}</div></div>
+                                                    </div>
+                                                    {gameOverMsg && (<div className="mb-6"><div className="text-brandBlue font-bold text-2xl uppercase border-b-2 border-blue-200 pb-1 mb-2">{gameOverMsg.title}</div><p className="text-xl text-slate-600 italic leading-relaxed">"{gameOverMsg.message}"</p></div>)}
+                                                    <button onClick={restartGame} className="btn-pixel-wrapper w-full group active:translate-y-1 transition-transform">
+                                                        <div className="bg-white p-1 pixel-clip shadow-[4px_4px_0px_0px_#7f1d1d]"><div className="pixel-inner bg-brandRed py-4 text-white font-bold text-lg pixel-clip flex items-center justify-center gap-2 group-hover:bg-red-600"><RotateCcw className="w-5 h-5" />REINTENTAR</div></div>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
